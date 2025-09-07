@@ -7,11 +7,9 @@ import com.solicare.app.backend.domain.dto.device.DeviceManageResult;
 import com.solicare.app.backend.domain.dto.device.DeviceQueryResult;
 import com.solicare.app.backend.domain.dto.push.PushDeliveryResult;
 import com.solicare.app.backend.domain.enums.Push;
-import com.solicare.app.backend.domain.enums.Role;
 import com.solicare.app.backend.domain.service.DeviceService;
 import com.solicare.app.backend.domain.service.FirebaseService;
 import com.solicare.app.backend.global.res.ApiResponse;
-import com.solicare.app.backend.global.res.ApiStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -20,12 +18,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import lombok.AccessLevel;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,21 +47,7 @@ public class FirebaseController {
     })
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmStatus(
-            Authentication authentication, @RequestParam String token) {
-        if (authentication.getAuthorities().stream()
-                .noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            Role role =
-                    Role.valueOf(
-                            authentication.getAuthorities().stream()
-                                    .findFirst()
-                                    .orElseThrow(
-                                            () -> new IllegalArgumentException("No role found"))
-                                    .getAuthority()
-                                    .replace("ROLE_", ""));
-            if (!deviceService.isDeviceOwner(role, authentication.getName(), Push.FCM, token)) {
-                return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인의 기기만 조회 가능합니다.");
-            }
-        }
+            @RequestParam String token) {
         DeviceQueryResult result = deviceService.getCurrentStatus(Push.FCM, token);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
@@ -108,23 +90,7 @@ public class FirebaseController {
     })
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> fcmPush(
-            @NonNull Authentication authentication,
-            @PathVariable String token,
-            @RequestBody @Valid PushRequestDTO.Send dto) {
-        if (authentication.getAuthorities().stream()
-                .noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            Role role =
-                    Role.valueOf(
-                            authentication.getAuthorities().stream()
-                                    .findFirst()
-                                    .orElseThrow(
-                                            () -> new IllegalArgumentException("No role found"))
-                                    .getAuthority()
-                                    .replace("ROLE_", ""));
-            if (!deviceService.isDeviceOwner(role, authentication.getName(), Push.FCM, token)) {
-                return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인의 기기만 전송 가능합니다.");
-            }
-        }
+            @PathVariable String token, @RequestBody @Valid PushRequestDTO.Send dto) {
         PushDeliveryResult result =
                 firebaseService.sendMessageTo(token, dto.channel(), dto.title(), dto.message());
         return apiResponseFactory.onResult(
