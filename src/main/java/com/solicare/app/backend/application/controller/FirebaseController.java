@@ -35,6 +35,30 @@ public class FirebaseController {
     private final FirebaseService firebaseService;
     private final ApiResponseFactory apiResponseFactory;
 
+    @GetMapping("/fcm/devices")
+    @Operation(summary = "FCM 등록된 기기 목록 조회", description = "(관리자) 현재 등록된 모든 FCM 기기 목록을 조회합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "기기 목록 조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "자격 증명 실패"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "403",
+                description = "권한 없음")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmDevices() {
+        DeviceQueryResult result = deviceService.getAllDevicesByPush(Push.FCM);
+        return apiResponseFactory.onResult(
+                result.getStatus().getApiStatus(),
+                result.getStatus().getCode(),
+                result.getStatus().getMessage(),
+                result.getResponse(),
+                result.getException());
+    }
+
     @GetMapping("/fcm/status")
     @Operation(summary = "FCM 상태 확인", description = "FCM 토큰의 등록 상태를 확인합니다.")
     @ApiResponses({

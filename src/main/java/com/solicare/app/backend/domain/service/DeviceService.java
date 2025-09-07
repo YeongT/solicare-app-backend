@@ -61,6 +61,15 @@ public class DeviceService {
         }
     }
 
+    public DeviceQueryResult getAllDevicesByPush(Push type) {
+        return DeviceQueryResult.of(
+                DeviceQueryResult.Status.SUCCESS,
+                deviceRepository.findByType(type).stream()
+                        .map(deviceMapper::from)
+                        .collect(Collectors.toList()),
+                null);
+    }
+
     public DeviceQueryResult getCurrentStatus(Push type, String token) {
         Device device = deviceRepository.findByTypeAndToken(type, token).orElse(null);
         if (device == null) {

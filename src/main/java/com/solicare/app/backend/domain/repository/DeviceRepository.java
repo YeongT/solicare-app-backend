@@ -13,6 +13,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     Optional<Device> findByTypeAndToken(Push type, String token);
 
+    List<Device> findByType(Push type);
+
     List<Device> findByMember_Uuid(String memberUuid);
 
     List<Device> findBySenior_Uuid(String seniorUuid);
