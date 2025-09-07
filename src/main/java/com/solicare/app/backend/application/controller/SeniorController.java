@@ -60,7 +60,7 @@ public class SeniorController {
                 description = "이미 존재하는 모니터링 대상 사용자 ID")
     })
     @PostMapping("/join")
-    public ResponseEntity<ApiResponse<SeniorResponseDTO.Join>> seniorJoin(
+    public ResponseEntity<ApiResponse<SeniorResponseDTO.Login>> seniorJoin(
             @RequestBody @Valid SeniorRequestDTO.Join seniorJoinRequestDTO) {
         SeniorJoinResult result = seniorService.createAndIssueToken(seniorJoinRequestDTO);
         return apiResponseFactory.onResult(

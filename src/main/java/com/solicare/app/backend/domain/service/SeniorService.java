@@ -40,7 +40,9 @@ public class SeniorService {
 
         String jwtToken = jwtTokenProvider.createToken(List.of(Role.SENIOR), newSenior.getUuid());
         return SeniorJoinResult.of(
-                SeniorJoinResult.Status.SUCCESS, new SeniorResponseDTO.Join(jwtToken), null);
+                SeniorJoinResult.Status.SUCCESS,
+                new SeniorResponseDTO.Login(dto.name(), jwtToken),
+                null);
     }
 
     /** Senior 로그인 및 JWT 토큰 발급 */

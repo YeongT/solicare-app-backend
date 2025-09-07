@@ -48,7 +48,9 @@ public class MemberService {
         memberRepository.save(newMember);
         String jwtToken = jwtTokenProvider.createToken(List.of(Role.MEMBER), newMember.getUuid());
         return MemberJoinResult.of(
-                MemberJoinResult.Status.SUCCESS, new MemberResponseDTO.Join(jwtToken), null);
+                MemberJoinResult.Status.SUCCESS,
+                new MemberResponseDTO.Login(dto.name(), jwtToken),
+                null);
     }
 
     // ================== 로그인 (토큰 발급) ==================

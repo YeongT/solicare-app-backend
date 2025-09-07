@@ -12,7 +12,7 @@ import lombok.Getter;
 @AllArgsConstructor(staticName = "of")
 public class MemberJoinResult implements ServiceResult {
     private Status status;
-    private MemberResponseDTO.Join response;
+    private MemberResponseDTO.Login response;
     private Exception exception;
 
     @Override

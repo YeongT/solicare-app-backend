@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class MemberResponseDTO {
-    @Schema(name = "MemberJoinResponse", description = "회원가입 응답 DTO")
-    public record Join(@Schema(description = "JWT 토큰") String token) {}
-
     @Schema(name = "MemberLoginResponse", description = "로그인 응답 DTO")
     public record Login(
             @Schema(description = "로그인된 사용자 이름") String name,

@@ -63,7 +63,7 @@ public class MemberController {
                 description = "중복 회원")
     })
     @PostMapping("/join")
-    public ResponseEntity<ApiResponse<MemberResponseDTO.Join>> memberJoin(
+    public ResponseEntity<ApiResponse<MemberResponseDTO.Login>> memberJoin(
             @RequestBody @Valid MemberRequestDTO.Join memberJoinRequestDTO) {
         MemberJoinResult result = memberService.createAndIssueToken(memberJoinRequestDTO);
         return apiResponseFactory.onResult(
