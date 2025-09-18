@@ -43,7 +43,7 @@ public class CareService {
                             .findByUuid(memberUuid)
                             .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
             List<Senior> seniors =
-                    careRelationRepository.findByMember(member).stream()
+                    careRelationRepository.findByMemberOrderByMember_NameAsc(member).stream()
                             .map(Care::getSenior)
                             .toList();
             return CareQueryResult.of(
@@ -62,7 +62,7 @@ public class CareService {
                             .findByUuid(seniorUuid)
                             .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
             List<Member> members =
-                    careRelationRepository.findBySenior(senior).stream()
+                    careRelationRepository.findBySeniorOrderBySenior_NameAsc(senior).stream()
                             .map(Care::getMember)
                             .toList();
             return CareQueryResult.of(
