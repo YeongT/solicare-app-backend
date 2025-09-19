@@ -81,7 +81,7 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @PutMapping("/fcm/{token}")
+    @PostMapping("/fcm/register")
     @Operation(summary = "FCM 토큰 등록", description = "FCM 토큰을 등록합니다.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -92,8 +92,8 @@ public class FirebaseController {
                 description = "자격 증명 실패")
     })
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmRegister(
-            @PathVariable String token) {
-        DeviceManageResult result = deviceService.register(Push.FCM, token);
+            @Valid @RequestBody PushRequestDTO.TokenBody dto) {
+        DeviceManageResult result = deviceService.register(Push.FCM, dto.token());
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -102,7 +102,7 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @PostMapping("/fcm/{token}")
+    @PostMapping("/fcm/push")
     @Operation(summary = "FCM 푸시 전송", description = "특정 토큰으로 FCM 푸시를 전송합니다.")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -113,10 +113,10 @@ public class FirebaseController {
                 description = "자격 증명 실패")
     })
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> fcmPush(
-            @PathVariable String token, @RequestBody @Valid PushRequestDTO.Send dto) {
+    public ResponseEntity<ApiResponse<Void>> fcmPush(@RequestBody @Valid PushRequestDTO.Send dto) {
         PushDeliveryResult result =
-                firebaseService.sendMessageTo(token, dto.channel(), dto.title(), dto.message());
+                firebaseService.sendMessageTo(
+                        dto.token(), dto.channel(), dto.title(), dto.message());
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -146,7 +146,7 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @PostMapping("/fcm/renew")
+    @PutMapping("/fcm/renew/{oldToken}")
     @Operation(
             summary = "FCM 토큰 갱신",
             description = "기존 FCM 토큰을 새로운 토큰으로 업데이트 합니다. 기존에 등록된 토큰이 없으면 새로 등록합니다.")
@@ -159,8 +159,8 @@ public class FirebaseController {
                 description = "자격 증명 실패")
     })
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmRenew(
-            @RequestBody @Valid PushRequestDTO.RenewToken dto) {
-        DeviceManageResult result = deviceService.update(Push.FCM, dto.oldToken(), dto.newToken());
+            @PathVariable String oldToken, @RequestBody @Valid PushRequestDTO.TokenBody dto) {
+        DeviceManageResult result = deviceService.update(Push.FCM, oldToken, dto.token());
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
