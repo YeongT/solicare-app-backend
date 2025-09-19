@@ -147,27 +147,29 @@ public class DeviceService {
                         DeviceManageResult.Status.ALREADY_LINKED, deviceMapper.from(device), null);
             }
 
-            switch (role) {
-                case MEMBER -> {
-                    Member member =
-                            memberRepository
+            Member member =
+                    (role == Role.MEMBER)
+                            ? memberRepository
                                     .findByUuid(uuid)
                                     .orElseThrow(
-                                            () -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
-
+                                            () -> new IllegalArgumentException("MEMBER_NOT_FOUND"))
+                            : null;
+            Senior senior =
+                    (role == Role.SENIOR)
+                            ? seniorRepository
+                                    .findByUuid(uuid)
+                                    .orElseThrow(
+                                            () -> new IllegalArgumentException("SENIOR_NOT_FOUND"))
+                            : null;
+            pushService.pushBatch(role, uuid, PushChannel.INFO, "새로운 기기 연결", "새로운 기기가 연결되었습니다.");
+            switch (role) {
+                case MEMBER -> {
                     device.link(member);
                 }
                 case SENIOR -> {
-                    Senior senior =
-                            seniorRepository
-                                    .findByUuid(uuid)
-                                    .orElseThrow(
-                                            () -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
                     device.link(senior);
                 }
-                default -> throw new IllegalArgumentException("Invalid role: " + role);
             }
-            pushService.pushBatch(role, uuid, PushChannel.INFO, "새로운 기기 연결", "새로운 기기가 연결되었습니다.");
             pushService.sendPushToDevice(
                     deviceUuid, PushChannel.INFO, "기기 연결 성공", "기기가 성공적으로 연결되었습니다.");
             return DeviceManageResult.of(
