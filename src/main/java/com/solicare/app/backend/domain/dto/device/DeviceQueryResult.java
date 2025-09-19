@@ -13,9 +13,9 @@ import java.util.List;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class DeviceQueryResult implements ServiceResult {
-    Status status;
-    List<DeviceResponseDTO.Info> response;
-    Exception exception;
+    private Status status;
+    private List<DeviceResponseDTO.Info> response;
+    private Exception exception;
 
     @Override
     public boolean isSuccess() {
