@@ -12,7 +12,6 @@ import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -34,14 +33,6 @@ public class SeniorController {
     private final ApiResponseFactory apiResponseFactory;
 
     @Operation(summary = "시니어 회원가입", description = "새로운 시니어를 등록합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "회원가입 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "409",
-                description = "이미 존재하는 모니터링 대상 사용자 ID")
-    })
     @PostMapping("/join")
     public ResponseEntity<ApiResponse<SeniorResponseDTO.Login>> seniorJoin(
             @RequestBody @Valid SeniorRequestDTO.Join seniorJoinRequestDTO) {
@@ -55,14 +46,6 @@ public class SeniorController {
     }
 
     @Operation(summary = "시니어 로그인", description = "시니어의 사용자 ID와 PW로 로그인합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "로그인 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<SeniorResponseDTO.Login>> seniorLogin(
             @RequestBody @Valid SeniorRequestDTO.Login seniorLoginRequestDTO) {
@@ -76,14 +59,6 @@ public class SeniorController {
     }
 
     @Operation(summary = "시니어 정보조회", description = "특정 시니어의 UUID로, 해당 시니어의 상세 프로필 정보를 조회합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
     @GetMapping("/{seniorUuid}")
     @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<SeniorResponseDTO.Profile>> getSeniorProfile(

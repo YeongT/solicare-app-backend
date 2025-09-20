@@ -12,7 +12,6 @@ import com.solicare.app.backend.domain.service.FirebaseService;
 import com.solicare.app.backend.global.res.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -35,20 +34,9 @@ public class FirebaseController {
     private final FirebaseService firebaseService;
     private final ApiResponseFactory apiResponseFactory;
 
-    @GetMapping("/fcm/devices")
     @Operation(summary = "FCM 등록된 기기 목록 조회", description = "(관리자) 현재 등록된 모든 FCM 기기 목록을 조회합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "기기 목록 조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "403",
-                description = "권한 없음")
-    })
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/fcm/devices")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmDevices() {
         DeviceQueryResult result = deviceService.getAllDevicesByPush(Push.FCM);
         return apiResponseFactory.onResult(
@@ -59,17 +47,9 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @GetMapping("/fcm/status")
     @Operation(summary = "FCM 상태 확인", description = "FCM 토큰의 등록 상태를 확인합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "상태 확인 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
+    @GetMapping("/fcm/status")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmStatus(
             @RequestParam String token) {
         DeviceQueryResult result = deviceService.getCurrentStatus(Push.FCM, token);
@@ -81,16 +61,8 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @PostMapping("/fcm/register")
     @Operation(summary = "FCM 토큰 등록", description = "FCM 토큰을 등록합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "기기 등록 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
+    @PostMapping("/fcm/register")
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmRegister(
             @Valid @RequestBody PushRequestDTO.TokenBody dto) {
         DeviceManageResult result = deviceService.register(Push.FCM, dto.token());
@@ -102,17 +74,9 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @PostMapping("/fcm/push")
     @Operation(summary = "FCM 푸시 전송", description = "특정 토큰으로 FCM 푸시를 전송합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "푸시 전송 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
+    @PostMapping("/fcm/push")
     public ResponseEntity<ApiResponse<Void>> fcmPush(@RequestBody @Valid PushRequestDTO.Send dto) {
         PushDeliveryResult result =
                 firebaseService.sendMessageTo(
@@ -125,16 +89,8 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @DeleteMapping("/fcm/{token}")
     @Operation(summary = "FCM 토큰 삭제", description = "특정 FCM 토큰을 DB에서 삭제합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "등록 해제 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
+    @DeleteMapping("/fcm/{token}")
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmUnregister(
             @PathVariable String token) {
         DeviceManageResult result = deviceService.delete(Push.FCM, token);
@@ -146,18 +102,10 @@ public class FirebaseController {
                 result.getException());
     }
 
-    @PutMapping("/fcm/renew/{oldToken}")
     @Operation(
             summary = "FCM 토큰 갱신",
             description = "기존 FCM 토큰을 새로운 토큰으로 업데이트 합니다. 기존에 등록된 토큰이 없으면 새로 등록합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "토큰 업데이트/등록 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
+    @PutMapping("/fcm/renew/{oldToken}")
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmRenew(
             @PathVariable String oldToken, @RequestBody @Valid PushRequestDTO.TokenBody dto) {
         DeviceManageResult result = deviceService.update(Push.FCM, oldToken, dto.token());

@@ -12,7 +12,6 @@ import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -34,17 +33,6 @@ public class MemberController {
     private final ApiResponseFactory apiResponseFactory;
 
     @Operation(summary = "멤버 회원가입", description = "새로운 멤버를 등록합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "회원가입 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "400",
-                description = "잘못된 요청"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "409",
-                description = "중복 회원")
-    })
     @PostMapping("/join")
     public ResponseEntity<ApiResponse<MemberResponseDTO.Login>> memberJoin(
             @RequestBody @Valid MemberRequestDTO.Join memberJoinRequestDTO) {
@@ -58,14 +46,6 @@ public class MemberController {
     }
 
     @Operation(summary = "멤버 로그인", description = "멤버의 이메일 주소와 비밀번호로 로그인합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "로그인 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<MemberResponseDTO.Login>> memberLogin(
             @RequestBody @Valid MemberRequestDTO.Login memberLoginRequestDTO) {
@@ -79,14 +59,6 @@ public class MemberController {
     }
 
     @Operation(summary = "멤버 정보조회", description = "특정 멤버의 UUID로, 해당 회원의 회원정보를 조회합니다.")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "401",
-                description = "자격 증명 실패")
-    })
     @GetMapping("/{memberUuid}")
     @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN')")
     public ResponseEntity<ApiResponse<MemberResponseDTO.Profile>> getMemberProfile(
