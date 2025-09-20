@@ -41,7 +41,7 @@ public class SeniorService {
         String jwtToken = jwtTokenProvider.createToken(List.of(Role.SENIOR), newSenior.getUuid());
         return SeniorJoinResult.of(
                 SeniorJoinResult.Status.SUCCESS,
-                new SeniorResponseDTO.Login(dto.name(), jwtToken),
+                new SeniorResponseDTO.Login(seniorMapper.toProfileDTO(newSenior), jwtToken),
                 null);
     }
 
@@ -59,7 +59,7 @@ public class SeniorService {
         String jwtToken = jwtTokenProvider.createToken(List.of(Role.SENIOR), senior.getUuid());
         return SeniorLoginResult.of(
                 SeniorLoginResult.Status.SUCCESS,
-                new SeniorResponseDTO.Login(senior.getName(), jwtToken),
+                new SeniorResponseDTO.Login(seniorMapper.toProfileDTO(senior), jwtToken),
                 null);
     }
 
