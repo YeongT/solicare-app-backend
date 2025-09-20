@@ -18,4 +18,6 @@ public interface CareAlertRepository extends JpaRepository<CareAlert, String> {
     Page<CareAlert> findAllBySenior_Uuid(String seniorUuid, Pageable pageable);
 
     Page<CareAlert> findBySenior_UuidAndIsDismissedIsFalse(String seniorUuid, Pageable pageable);
+
+    long countBySenior_UuidAndIsReadFalseAndIsDismissedIsFalse(String seniorUuid);
 }

@@ -2,9 +2,9 @@ package com.solicare.app.backend.application.controller;
 
 import com.solicare.app.backend.application.dto.request.MemberRequestDTO;
 import com.solicare.app.backend.application.dto.request.PushRequestDTO;
+import com.solicare.app.backend.application.dto.res.CareResponseDTO;
 import com.solicare.app.backend.application.dto.res.DeviceResponseDTO;
 import com.solicare.app.backend.application.dto.res.MemberResponseDTO;
-import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.factory.ApiResponseFactory;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
 import com.solicare.app.backend.domain.dto.care.CareQueryResult;
@@ -128,7 +128,7 @@ public class MemberController {
             description = "특정 회원의 UUID로, 해당 회원이 모니터링하는 시니어(모니터링 대상) 목록을 조회합니다.")
     @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN')")
     @GetMapping("/{memberUuid}/seniors")
-    public ResponseEntity<ApiResponse<List<SeniorResponseDTO.Profile>>> getCareSeniors(
+    public ResponseEntity<ApiResponse<List<CareResponseDTO.SeniorBrief>>> getCareSeniors(
             Authentication authentication, @PathVariable String memberUuid) {
         boolean isAdmin =
                 authentication.getAuthorities().stream()
@@ -137,7 +137,7 @@ public class MemberController {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 대상 목록을 조회할 수 있습니다.");
         }
-        CareQueryResult<SeniorResponseDTO.Profile> result =
+        CareQueryResult<CareResponseDTO.SeniorBrief> result =
                 careService.querySeniorByMember(memberUuid);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
@@ -150,7 +150,7 @@ public class MemberController {
     @Operation(summary = "모니터링 대상 추가", description = "특정 회원의 UUID로, 해당 회원의 모니터링 대상(시니어)을 추가합니다.")
     @PostMapping("/{memberUuid}/seniors")
     @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN')")
-    public ResponseEntity<ApiResponse<SeniorResponseDTO.Profile>> addCareSenior(
+    public ResponseEntity<ApiResponse<CareResponseDTO.SeniorBrief>> addCareSenior(
             Authentication authentication,
             @PathVariable String memberUuid,
             @RequestBody @Valid MemberRequestDTO.LinkSenior requestDto) {
@@ -161,7 +161,7 @@ public class MemberController {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 대상을 추가할 수 있습니다");
         }
-        CareLinkResult<SeniorResponseDTO.Profile> result =
+        CareLinkResult<CareResponseDTO.SeniorBrief> result =
                 careService.linkSeniorToMember(memberUuid, requestDto);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
