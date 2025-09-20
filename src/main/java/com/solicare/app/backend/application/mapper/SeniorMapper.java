@@ -30,12 +30,14 @@ public class SeniorMapper {
 
     public SeniorResponseDTO.Profile toProfileDTO(Senior senior) {
         return new SeniorResponseDTO.Profile(
+                senior.getUuid(),
                 senior.getUserId(),
                 senior.getName(),
                 senior.getAge(),
                 senior.getGender(),
                 senior.getPhoneNumber(),
                 senior.getAddress(),
-                senior.getNote());
+                senior.getNote(),
+                senior.getMonitored());
     }
 }

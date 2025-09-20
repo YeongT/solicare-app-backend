@@ -16,11 +16,13 @@ public final class SeniorResponseDTO {
 
     @Schema(name = "SeniorProfileResponse", description = "시니어 정보 응답 DTO")
     public record Profile(
+            @Schema(description = "UUID") String uuid,
             @Schema(description = "사용자 ID") String userId,
             @Schema(description = "이름") String name,
             @Schema(description = "나이") Integer age,
             @Schema(description = "성별") Gender gender,
             @Schema(description = "전화번호") String phoneNumber,
             @Schema(description = "주소") String address,
-            @Schema(description = "비고") String note) {}
+            @Schema(description = "비고") String note,
+            @Schema(description = "모니터링 활성화 여부") Boolean monitored) {}
 }

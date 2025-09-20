@@ -6,6 +6,7 @@ import com.solicare.app.backend.application.dto.res.DeviceResponseDTO;
 import com.solicare.app.backend.application.dto.res.MemberResponseDTO;
 import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.factory.ApiResponseFactory;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
 import com.solicare.app.backend.domain.dto.care.CareQueryResult;
 import com.solicare.app.backend.domain.dto.device.DeviceManageResult;
@@ -35,9 +36,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Tag(name = "Senior", description = "시니어(모니터링 대상) 관련 API")
 @RestController
@@ -257,5 +261,45 @@ public class SeniorController {
                 result.getStatus().getMessage(),
                 result.getDetails(),
                 null);
+    }
+
+    @Operation(summary = "시니어 모니터링 활성화/비활성화", description = "특정 시니어의 UUID로 모니터링 상태(on/off)를 변경합니다.")
+    @PatchMapping("/{seniorUuid}/monitoring")
+    @PreAuthorize("hasAnyRole('MEMBER', 'SENIOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<SeniorResponseDTO.Profile>> updateMonitoringEnabled(
+            Authentication authentication,
+            @PathVariable String seniorUuid,
+            @RequestParam("enabled") boolean enabled) {
+        Set<String> authorities =
+                authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toSet());
+        boolean isAdmin = authorities.contains("ROLE_ADMIN");
+        boolean isMember = authorities.contains("ROLE_MEMBER");
+        boolean isSenior = authorities.contains("ROLE_SENIOR");
+        if (!isAdmin) {
+            if (isSenior && !authentication.getName().equals(seniorUuid)) {
+                return apiResponseFactory.onFailure(
+                        ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 상태를 변경할 수 있습니다.");
+            }
+            if (isMember) {
+                BasicServiceResult<Boolean> careCheckResult =
+                        careService.hasMemberAccessToSenior(authentication.getName(), seniorUuid);
+                if (!careCheckResult.getPayload()) {
+                    return careCheckResult.getException() != null
+                            ? apiResponseFactory.onResult(
+                                    ApiStatus._INTERNAL_SERVER_ERROR,
+                                    ApiStatus._INTERNAL_SERVER_ERROR.getCode(),
+                                    ApiStatus._INTERNAL_SERVER_ERROR.getMessage(),
+                                    null,
+                                    careCheckResult.getException())
+                            : apiResponseFactory.onFailure(
+                                    ApiStatus._FORBIDDEN, "해당 시니어의 모니터링 상태를 변경할 권한이 없습니다.");
+                }
+            }
+        }
+        BasicServiceResult<SeniorResponseDTO.Profile> result =
+                seniorService.setMonitoringEnabled(seniorUuid, enabled);
+        return result.getApiResponse(apiResponseFactory);
     }
 }

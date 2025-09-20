@@ -6,6 +6,8 @@ import com.solicare.app.backend.application.dto.res.MemberResponseDTO;
 import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.mapper.MemberMapper;
 import com.solicare.app.backend.application.mapper.SeniorMapper;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
+import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
 import com.solicare.app.backend.domain.dto.care.CareQueryResult;
 import com.solicare.app.backend.domain.entity.Care;
@@ -35,6 +37,24 @@ public class CareService {
     private final CareRelationRepository careRelationRepository;
     private final MemberMapper memberMapper;
     private final SeniorMapper seniorMapper;
+
+    public BasicServiceResult<Boolean> hasMemberAccessToSenior(
+            String memberUuid, String seniorUuid) {
+        try {
+            Member member =
+                    memberRepository
+                            .findByUuid(memberUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
+            Senior senior =
+                    seniorRepository
+                            .findByUuid(seniorUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
+            boolean linked = careRelationRepository.existsByMemberAndSenior(member, senior);
+            return BasicServiceResult.of(ServiceResult.GenericStatus.SUCCESS, linked, null);
+        } catch (Exception e) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.ERROR, null, e);
+        }
+    }
 
     public CareQueryResult<SeniorResponseDTO.Profile> querySeniorByMember(String memberUuid) {
         try {

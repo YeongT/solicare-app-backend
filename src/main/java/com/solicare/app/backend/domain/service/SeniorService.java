@@ -3,6 +3,8 @@ package com.solicare.app.backend.domain.service;
 import com.solicare.app.backend.application.dto.request.SeniorRequestDTO;
 import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.mapper.SeniorMapper;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
+import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorJoinResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorLoginResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorProfileResult;
@@ -70,5 +72,17 @@ public class SeniorService {
         }
         SeniorResponseDTO.Profile profile = seniorMapper.toProfileDTO(senior);
         return SeniorProfileResult.of(SeniorProfileResult.Status.SUCCESS, profile, null);
+    }
+
+    public BasicServiceResult<SeniorResponseDTO.Profile> setMonitoringEnabled(
+            String seniorUuid, boolean monitored) {
+        Senior senior = seniorRepository.findById(seniorUuid).orElse(null);
+        if (senior == null) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.NOT_FOUND, null, null);
+        }
+        senior.setMonitored(monitored);
+        seniorRepository.save(senior);
+        return BasicServiceResult.of(
+                ServiceResult.GenericStatus.SUCCESS, seniorMapper.toProfileDTO(senior), null);
     }
 }
