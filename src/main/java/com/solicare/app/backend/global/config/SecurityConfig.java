@@ -84,6 +84,20 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.DELETE, "/api/firebase/fcm/*")
                                         .permitAll()
+                                        .requestMatchers(
+                                                HttpMethod.GET,
+                                                "/api/seniors/*/heart-rates",
+                                                "/api/seniors/*/heart-rates/stats",
+                                                "/api/seniors/*/active-rates",
+                                                "/api/seniors/*/active-rates/stats",
+                                                "/api/seniors/*/medicine-histories")
+                                        .permitAll()
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/seniors/*/heart-rates",
+                                                "/api/seniors/*/active-rates",
+                                                "/api/seniors/*/medicine-histories")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated())
                 .exceptionHandling(

@@ -14,4 +14,6 @@ public interface CareRelationRepository extends JpaRepository<Care, String> {
     List<Care> findBySeniorOrderBySenior_NameAsc(Senior senior);
 
     boolean existsByMemberAndSenior(Member member, Senior senior);
+
+    boolean existsByMember_UuidAndSenior_Uuid(String memberUuid, String seniorUuid);
 }

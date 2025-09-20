@@ -33,4 +33,5 @@ public class CareQueryResult<ProfileResponse> implements ServiceResult {
         private final String code;
         private final String message;
     }
+    // TODO: migrate to use BasicServiceResult<ProfileResponse>
 }
