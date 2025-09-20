@@ -16,7 +16,6 @@ public final class SeniorResponseDTO {
 
     @Schema(name = "SeniorProfileResponse", description = "시니어 정보 응답 DTO")
     public record Profile(
-            @Schema(description = "사용자 ID") String userId,
             @Schema(description = "이름") String name,
             @Schema(description = "나이") Integer age,
             @Schema(description = "성별") Gender gender,

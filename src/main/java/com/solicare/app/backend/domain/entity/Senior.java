@@ -45,6 +45,11 @@ public class Senior {
     @Column(nullable = false)
     private String note;
 
+    @Column(nullable = false)
+    @Setter
+    @Builder.Default
+    private Boolean monitored = false;
+
     @Builder.Default
     @OneToMany(mappedBy = "senior", cascade = CascadeType.ALL)
     private List<Device> devices = new ArrayList<>();

@@ -7,13 +7,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 @AllArgsConstructor(staticName = "of")
-public class CareQueryResult<ProfileResponse> implements ServiceResult {
+public class CareQueryResult<ResponseDataType> implements ServiceResult {
     private Status status;
-    private List<ProfileResponse> response;
+    private ResponseDataType response;
     private Exception exception;
 
     @Override
