@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public final class SeniorResponseDTO {
     @Schema(name = "SeniorLoginResponse", description = "시니어 로그인 응답 DTO")
     public record Login(
-            @Schema(description = "로그인된 사용자 이름") String name,
+            @Schema(description = "로그인된 시니어 정보") Profile profile,
             @Schema(description = "JWT 토큰") String token) {}
 
     @Schema(name = "SeniorProfileResponse", description = "시니어 정보 응답 DTO")
