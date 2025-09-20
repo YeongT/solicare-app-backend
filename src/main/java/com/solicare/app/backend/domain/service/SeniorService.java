@@ -74,15 +74,13 @@ public class SeniorService {
         return SeniorProfileResult.of(SeniorProfileResult.Status.SUCCESS, profile, null);
     }
 
-    public BasicServiceResult<SeniorResponseDTO.Profile> setMonitoringEnabled(
-            String seniorUuid, boolean monitored) {
+    public BasicServiceResult<Void> setMonitoringEnabled(String seniorUuid, boolean monitored) {
         Senior senior = seniorRepository.findById(seniorUuid).orElse(null);
         if (senior == null) {
             return BasicServiceResult.of(ServiceResult.GenericStatus.NOT_FOUND, null, null);
         }
         senior.setMonitored(monitored);
         seniorRepository.save(senior);
-        return BasicServiceResult.of(
-                ServiceResult.GenericStatus.SUCCESS, seniorMapper.toProfileDTO(senior), null);
+        return BasicServiceResult.of(ServiceResult.GenericStatus.SUCCESS, null, null);
     }
 }

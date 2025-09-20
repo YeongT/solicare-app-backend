@@ -1,17 +1,24 @@
 package com.solicare.app.backend.application.mapper;
 
+import com.solicare.app.backend.application.dto.request.CareRequestDTO.PostCareAlert;
+import com.solicare.app.backend.application.dto.request.CareRequestDTO.PostSensorStat;
 import com.solicare.app.backend.application.dto.res.CareResponseDTO;
+import com.solicare.app.backend.domain.entity.CareAlert;
 import com.solicare.app.backend.domain.entity.Member;
 import com.solicare.app.backend.domain.entity.Senior;
+import com.solicare.app.backend.domain.entity.SeniorSensorStat;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
+
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class CareMapper {
+    private static final DateTimeFormatter ISO_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private final SeniorMapper seniorMapper;
 
     public CareResponseDTO.MemberBrief toMemberBriefDTO(Member member) {
@@ -28,7 +35,67 @@ public class CareMapper {
                 senior.getUuid(), senior.getName(), unreadAlertCount);
     }
 
-    public CareResponseDTO.SeniorDetail toSeniorDetailDTO(Senior senior) {
-        return new CareResponseDTO.SeniorDetail(seniorMapper.toProfileDTO(senior));
+    public SeniorSensorStat toEntity(PostSensorStat dto, Senior senior) {
+        return SeniorSensorStat.builder()
+                .senior(senior)
+                .timestamp(dto.timestamp())
+                .cameraFallDetected(dto.cameraFallDetected())
+                .wearableFallDetected(dto.wearableFallDetected())
+                .temperature(dto.temperature())
+                .humidity(dto.humidity())
+                .heartRate(dto.heartRate())
+                .wearableBattery(dto.wearableBattery())
+                .build();
+    }
+
+    public CareAlert toEntity(PostCareAlert dto, Senior senior) {
+        return CareAlert.builder()
+                .senior(senior)
+                .timestamp(dto.timestamp())
+                .eventType(dto.eventType())
+                .monitorMode(dto.monitorMode())
+                .base64Image(dto.base64Image())
+                .isRead(dto.isRead() != null ? dto.isRead() : false)
+                .isDismissed(dto.isDismissed() != null ? dto.isDismissed() : false)
+                .build();
+    }
+
+    public CareResponseDTO.AlertBrief toAlertBrief(CareAlert alert) {
+        return new CareResponseDTO.AlertBrief(
+                alert.getUuid(),
+                alert.getEventType().name(),
+                alert.getTimestamp().format(ISO_FORMAT),
+                alert.getIsRead());
+    }
+
+    public CareResponseDTO.AlertDetail toAlertDetail(CareAlert alert) {
+        return new CareResponseDTO.AlertDetail(
+                alert.getUuid(),
+                alert.getEventType().name(),
+                alert.getMonitorMode().name(),
+                alert.getTimestamp().format(ISO_FORMAT),
+                alert.getBase64Image(),
+                alert.getIsRead(),
+                alert.getIsDismissed());
+    }
+
+    public CareResponseDTO.StatBrief toStatBrief(SeniorSensorStat stat) {
+        return new CareResponseDTO.StatBrief(
+                stat.getUuid(),
+                stat.getTimestamp().format(ISO_FORMAT),
+                stat.getHeartRate(),
+                stat.getTemperature());
+    }
+
+    public CareResponseDTO.StatDetail toStatDetail(SeniorSensorStat stat) {
+        return new CareResponseDTO.StatDetail(
+                stat.getUuid(),
+                stat.getTimestamp().format(ISO_FORMAT),
+                stat.getCameraFallDetected(),
+                stat.getWearableFallDetected(),
+                stat.getTemperature(),
+                stat.getHumidity(),
+                stat.getHeartRate(),
+                stat.getWearableBattery());
     }
 }

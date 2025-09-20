@@ -1,9 +1,13 @@
 package com.solicare.app.backend.domain.service;
 
+import com.solicare.app.backend.application.dto.request.CareRequestDTO.PostCareAlert;
+import com.solicare.app.backend.application.dto.request.CareRequestDTO.PostSensorStat;
 import com.solicare.app.backend.application.dto.request.MemberRequestDTO;
 import com.solicare.app.backend.application.dto.request.SeniorRequestDTO;
 import com.solicare.app.backend.application.dto.res.CareResponseDTO;
+import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.mapper.CareMapper;
+import com.solicare.app.backend.application.mapper.SeniorMapper;
 import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
@@ -11,10 +15,12 @@ import com.solicare.app.backend.domain.dto.care.CareQueryResult;
 import com.solicare.app.backend.domain.entity.Care;
 import com.solicare.app.backend.domain.entity.Member;
 import com.solicare.app.backend.domain.entity.Senior;
+import com.solicare.app.backend.domain.entity.SeniorSensorStat;
 import com.solicare.app.backend.domain.repository.CareAlertRepository;
 import com.solicare.app.backend.domain.repository.CareRelationRepository;
 import com.solicare.app.backend.domain.repository.MemberRepository;
 import com.solicare.app.backend.domain.repository.SeniorRepository;
+import com.solicare.app.backend.domain.repository.SeniorSensorStatRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -33,9 +39,11 @@ public class CareService {
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
     private final SeniorRepository seniorRepository;
-    private final CareRelationRepository careRelationRepository;
     private final CareAlertRepository careAlertRepository;
+    private final CareRelationRepository careRelationRepository;
+    private final SeniorSensorStatRepository seniorSensorStatRepository;
     private final CareMapper careMapper;
+    private final SeniorMapper seniorMapper;
 
     public BasicServiceResult<Boolean> hasMemberAccessToSenior(
             String memberUuid, String seniorUuid) {
@@ -55,7 +63,8 @@ public class CareService {
         }
     }
 
-    public CareQueryResult<CareResponseDTO.SeniorBrief> querySeniorByMember(String memberUuid) {
+    public CareQueryResult<List<CareResponseDTO.SeniorBrief>> querySeniorByMember(
+            String memberUuid) {
         try {
             Member member =
                     memberRepository
@@ -80,7 +89,8 @@ public class CareService {
         }
     }
 
-    public CareQueryResult<CareResponseDTO.MemberBrief> queryMemberBySenior(String seniorUuid) {
+    public CareQueryResult<List<CareResponseDTO.MemberBrief>> queryMemberBySenior(
+            String seniorUuid) {
         try {
             Senior senior =
                     seniorRepository
@@ -153,5 +163,75 @@ public class CareService {
             return CareLinkResult.of(CareLinkResult.Status.ERROR, null, e);
         }
     }
-    // TODO: refactor duplicate code above, use private methods to reduce redundancy
+
+    public BasicServiceResult<CareResponseDTO.StatBrief> addSensorStat(
+            String seniorUuid, PostSensorStat dto) {
+        try {
+            Senior senior =
+                    seniorRepository
+                            .findByUuid(seniorUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
+            SeniorSensorStat stat = careMapper.toEntity(dto, senior);
+            return BasicServiceResult.of(
+                    ServiceResult.GenericStatus.SUCCESS,
+                    careMapper.toStatBrief(seniorSensorStatRepository.save(stat)),
+                    null);
+        } catch (Exception e) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.ERROR, null, e);
+        }
+    }
+
+    public BasicServiceResult<CareResponseDTO.AlertBrief> addCareAlert(
+            String seniorUuid, PostCareAlert dto) {
+        try {
+            Senior senior =
+                    seniorRepository
+                            .findByUuid(seniorUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
+            return BasicServiceResult.of(
+                    ServiceResult.GenericStatus.SUCCESS,
+                    careMapper.toAlertBrief(
+                            careAlertRepository.save(careMapper.toEntity(dto, senior))),
+                    null);
+        } catch (Exception e) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.ERROR, null, e);
+        }
+    }
+
+    // TODO: use pagination for alerts and stats if needed (by client request)
+    public CareQueryResult<CareResponseDTO.SeniorDetail> getSeniorDetail(String seniorUuid) {
+        try {
+            Senior senior =
+                    seniorRepository
+                            .findByUuid(seniorUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
+            SeniorResponseDTO.Profile profile = seniorMapper.toProfileDTO(senior);
+            List<CareResponseDTO.AlertBrief> alerts = getRecentAlertBriefs(seniorUuid);
+            List<CareResponseDTO.StatBrief> stats = getRecentStatBriefs(seniorUuid);
+            return CareQueryResult.of(
+                    CareQueryResult.Status.SUCCESS,
+                    new CareResponseDTO.SeniorDetail(profile, senior.getMonitored(), alerts, stats),
+                    null);
+        } catch (IllegalArgumentException e) {
+            return CareQueryResult.of(CareQueryResult.Status.SENIOR_NOT_FOUND, null, e);
+        } catch (Exception e) {
+            return CareQueryResult.of(CareQueryResult.Status.ERROR, null, e);
+        }
+    }
+
+    private List<CareResponseDTO.AlertBrief> getRecentAlertBriefs(String seniorUuid) {
+        return careAlertRepository
+                .findTop5BySenior_UuidAndIsDismissedIsFalseOrderByTimestampDesc(seniorUuid)
+                .stream()
+                .map(careMapper::toAlertBrief)
+                .toList();
+    }
+
+    private List<CareResponseDTO.StatBrief> getRecentStatBriefs(String seniorUuid) {
+        return seniorSensorStatRepository
+                .findTop20BySenior_UuidOrderByTimestampDesc(seniorUuid)
+                .stream()
+                .map(careMapper::toStatBrief)
+                .toList();
+    }
 }

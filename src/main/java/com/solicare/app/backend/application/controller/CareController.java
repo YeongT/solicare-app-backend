@@ -1,15 +1,16 @@
 package com.solicare.app.backend.application.controller;
 
+import com.solicare.app.backend.application.dto.request.CareRequestDTO;
 import com.solicare.app.backend.application.dto.request.MemberRequestDTO;
 import com.solicare.app.backend.application.dto.request.SeniorRequestDTO;
 import com.solicare.app.backend.application.dto.res.CareResponseDTO;
-import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.factory.ApiResponseFactory;
 import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
 import com.solicare.app.backend.domain.dto.care.CareQueryResult;
 import com.solicare.app.backend.domain.service.CareService;
 import com.solicare.app.backend.domain.service.SeniorService;
+import com.solicare.app.backend.global.auth.AuthUtil;
 import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
 
@@ -24,12 +25,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Tag(name = "Care", description = "모니터링 및 케어 관련 API")
 @RestController
@@ -47,14 +45,11 @@ public class CareController {
     @GetMapping("/member/{memberUuid}/seniors")
     public ResponseEntity<ApiResponse<List<CareResponseDTO.SeniorBrief>>> getCareSeniors(
             Authentication authentication, @PathVariable String memberUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 대상 목록을 조회할 수 있습니다.");
         }
-        CareQueryResult<CareResponseDTO.SeniorBrief> result =
+        CareQueryResult<List<CareResponseDTO.SeniorBrief>> result =
                 careService.querySeniorByMember(memberUuid);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
@@ -71,10 +66,7 @@ public class CareController {
             Authentication authentication,
             @PathVariable String memberUuid,
             @RequestBody @Valid MemberRequestDTO.LinkSenior requestDto) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 대상을 추가할 수 있습니다");
         }
@@ -95,10 +87,7 @@ public class CareController {
             Authentication authentication,
             @PathVariable String memberUuid,
             @PathVariable String seniorUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 대상을 삭제할 수 있습니다");
         }
@@ -113,14 +102,11 @@ public class CareController {
     @GetMapping("/senior/{seniorUuid}/members")
     public ResponseEntity<ApiResponse<List<CareResponseDTO.MemberBrief>>> getCareMembers(
             Authentication authentication, @PathVariable String seniorUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 보호자 목록을 조회할 수 있습니다.");
         }
-        CareQueryResult<CareResponseDTO.MemberBrief> result =
+        CareQueryResult<List<CareResponseDTO.MemberBrief>> result =
                 careService.queryMemberBySenior(seniorUuid);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
@@ -137,10 +123,7 @@ public class CareController {
             Authentication authentication,
             @PathVariable String seniorUuid,
             @RequestBody @Valid SeniorRequestDTO.LinkMember requestDto) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인만 자신의 보호자를 추가할 수 있습니다");
         }
         CareLinkResult<CareResponseDTO.MemberBrief> result =
@@ -160,10 +143,7 @@ public class CareController {
             Authentication authentication,
             @PathVariable String seniorUuid,
             @PathVariable String memberUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 대상을 삭제할 수 있습니다");
         }
@@ -171,43 +151,70 @@ public class CareController {
         return apiResponseFactory.onFailure(ApiStatus._NOT_IMPLEMENTED, "Not implemented yet");
     }
 
+    @Operation(summary = "시니어 상세 조회", description = "특정 시니어의 UUID로 시니어 상세 정보를 조회합니다.")
+    @GetMapping("/senior/{seniorUuid}/")
+    @PreAuthorize("hasAnyRole('MEMBER', 'SENIOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CareResponseDTO.SeniorDetail>> getSeniorDetail(
+            Authentication authentication, @PathVariable String seniorUuid) {
+        if (AuthUtil.isDeniedToAccessSeniorByMemberOrSenior(
+                careService, authentication, seniorUuid)) {
+            return apiResponseFactory.onFailure(
+                    ApiStatus._FORBIDDEN, "해당 시니어의 상세 정보를 조회할 권한이 없습니다.");
+        }
+        CareQueryResult<CareResponseDTO.SeniorDetail> result =
+                careService.getSeniorDetail(seniorUuid);
+        return apiResponseFactory.onResult(
+                result.getStatus().getApiStatus(),
+                result.getStatus().getCode(),
+                result.getStatus().getMessage(),
+                result.getResponse(),
+                result.getException());
+    }
+
     @Operation(summary = "시니어 모니터링 활성화/비활성화", description = "특정 시니어의 UUID로 모니터링 상태(on/off)를 변경합니다.")
     @PatchMapping("/senior/{seniorUuid}/monitoring")
     @PreAuthorize("hasAnyRole('MEMBER', 'SENIOR', 'ADMIN')")
-    public ResponseEntity<ApiResponse<SeniorResponseDTO.Profile>> updateMonitoringEnabled(
+    public ResponseEntity<ApiResponse<Void>> updateMonitoringEnabled(
             Authentication authentication,
             @PathVariable String seniorUuid,
             @RequestParam("enabled") boolean enabled) {
-        Set<String> authorities =
-                authentication.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toSet());
-        boolean isAdmin = authorities.contains("ROLE_ADMIN");
-        boolean isMember = authorities.contains("ROLE_MEMBER");
-        boolean isSenior = authorities.contains("ROLE_SENIOR");
-        if (!isAdmin) {
-            if (isSenior && !authentication.getName().equals(seniorUuid)) {
-                return apiResponseFactory.onFailure(
-                        ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 상태를 변경할 수 있습니다.");
-            }
-            if (isMember) {
-                BasicServiceResult<Boolean> careCheckResult =
-                        careService.hasMemberAccessToSenior(authentication.getName(), seniorUuid);
-                if (!careCheckResult.getPayload()) {
-                    return careCheckResult.getException() != null
-                            ? apiResponseFactory.onResult(
-                                    ApiStatus._INTERNAL_SERVER_ERROR,
-                                    ApiStatus._INTERNAL_SERVER_ERROR.getCode(),
-                                    ApiStatus._INTERNAL_SERVER_ERROR.getMessage(),
-                                    null,
-                                    careCheckResult.getException())
-                            : apiResponseFactory.onFailure(
-                                    ApiStatus._FORBIDDEN, "해당 시니어의 모니터링 상태를 변경할 권한이 없습니다.");
-                }
-            }
+        if (AuthUtil.isDeniedToAccessSeniorByMemberOrSenior(
+                careService, authentication, seniorUuid)) {
+            return apiResponseFactory.onFailure(
+                    ApiStatus._FORBIDDEN, "해당 시니어의 모니터링 상태를 변경할 권한이 없습니다.");
         }
-        BasicServiceResult<SeniorResponseDTO.Profile> result =
-                seniorService.setMonitoringEnabled(seniorUuid, enabled);
+        BasicServiceResult<Void> result = seniorService.setMonitoringEnabled(seniorUuid, enabled);
+        return result.getApiResponse(apiResponseFactory);
+    }
+
+    @Operation(summary = "센서 데이터 등록", description = "특정 시니어의 UUID로 센서 데이터를 등록합니다.")
+    @PostMapping("/senior/{seniorUuid}/stats")
+    @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CareResponseDTO.StatBrief>> addSensorStat(
+            Authentication authentication,
+            @PathVariable String seniorUuid,
+            @RequestBody @Valid CareRequestDTO.PostSensorStat dto) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
+            return apiResponseFactory.onFailure(
+                    ApiStatus._FORBIDDEN, "본인만 자신의 센서 데이터를 등록할 수 있습니다.");
+        }
+        BasicServiceResult<CareResponseDTO.StatBrief> result =
+                careService.addSensorStat(seniorUuid, dto);
+        return result.getApiResponse(apiResponseFactory);
+    }
+
+    @Operation(summary = "알림 등록", description = "홈 서버로부터 이벤트를 수신하여 시니어의 알림을 생성하고 푸시로 전송합니다.")
+    @PostMapping("/senior/{seniorUuid}/alerts")
+    @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CareResponseDTO.AlertBrief>> addCareAlert(
+            Authentication authentication,
+            @PathVariable String seniorUuid,
+            @RequestBody @Valid CareRequestDTO.PostCareAlert requestDto) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인만 자신의 알림을 등록할 수 있습니다.");
+        }
+        BasicServiceResult<CareResponseDTO.AlertBrief> result =
+                careService.addCareAlert(seniorUuid, requestDto);
         return result.getApiResponse(apiResponseFactory);
     }
 }
