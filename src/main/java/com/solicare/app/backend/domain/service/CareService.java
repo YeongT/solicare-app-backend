@@ -130,7 +130,7 @@ public class CareService {
             }
             careRelationRepository.save(Care.builder().member(member).senior(senior).build());
             return CareLinkResult.of(
-                    CareLinkResult.Status.SUCCESS, careMapper.toSeniorBriefDTO(senior), null);
+                    CareLinkResult.Status.SUCCESS, careMapper.toSeniorBriefDTO(senior, 0L), null);
         } catch (Exception e) {
             return CareLinkResult.of(CareLinkResult.Status.ERROR, null, e);
         }

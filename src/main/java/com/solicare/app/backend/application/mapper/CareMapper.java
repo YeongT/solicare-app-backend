@@ -19,15 +19,10 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class CareMapper {
     private static final DateTimeFormatter ISO_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    private final SeniorMapper seniorMapper;
 
     public CareResponseDTO.MemberBrief toMemberBriefDTO(Member member) {
         return new CareResponseDTO.MemberBrief(
                 member.getUuid(), member.getName(), member.getEmail(), member.getPhoneNumber());
-    }
-
-    public CareResponseDTO.SeniorBrief toSeniorBriefDTO(Senior senior) {
-        return new CareResponseDTO.SeniorBrief(senior.getUuid(), senior.getName(), null);
     }
 
     public CareResponseDTO.SeniorBrief toSeniorBriefDTO(Senior senior, Long unreadAlertCount) {
@@ -55,8 +50,8 @@ public class CareMapper {
                 .eventType(dto.eventType())
                 .monitorMode(dto.monitorMode())
                 .base64Image(dto.base64Image())
-                .isRead(dto.isRead() != null ? dto.isRead() : false)
-                .isDismissed(dto.isDismissed() != null ? dto.isDismissed() : false)
+                .isRead(Boolean.TRUE.equals(dto.isRead()))
+                .isDismissed(Boolean.TRUE.equals(dto.isDismissed()))
                 .build();
     }
 

@@ -18,7 +18,7 @@ public class AuthUtil {
         Set<String> authorities = buildAuthoritiesSet(authentication);
         boolean isAdmin = authorities.contains("ROLE_ADMIN");
         boolean isMember = authorities.contains("ROLE_MEMBER");
-        return !(isAdmin || isMember && authentication.getName().equals(memberUuid));
+        return !(isAdmin || (isMember && authentication.getName().equals(memberUuid)));
     }
 
     private static Set<String> buildAuthoritiesSet(Authentication authentication) {
