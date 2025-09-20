@@ -152,7 +152,7 @@ public class CareController {
     }
 
     @Operation(summary = "시니어 상세 조회", description = "특정 시니어의 UUID로 시니어 상세 정보를 조회합니다.")
-    @GetMapping("/senior/{seniorUuid}/")
+    @GetMapping("/senior/{seniorUuid}")
     @PreAuthorize("hasAnyRole('MEMBER', 'SENIOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<CareResponseDTO.SeniorDetail>> getSeniorDetail(
             Authentication authentication, @PathVariable String seniorUuid) {
