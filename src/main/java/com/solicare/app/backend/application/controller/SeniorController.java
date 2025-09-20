@@ -7,6 +7,7 @@ import com.solicare.app.backend.domain.dto.senior.SeniorJoinResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorLoginResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorProfileResult;
 import com.solicare.app.backend.domain.service.SeniorService;
+import com.solicare.app.backend.global.auth.AuthUtil;
 import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
 
@@ -87,10 +88,7 @@ public class SeniorController {
     @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<SeniorResponseDTO.Profile>> getSeniorProfile(
             Authentication authentication, @PathVariable String seniorUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인의 정보만 조회 가능합니다.");
         }
         SeniorProfileResult result = seniorService.getProfile(seniorUuid);

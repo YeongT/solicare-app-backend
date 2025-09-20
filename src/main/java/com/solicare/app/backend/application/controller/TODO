@@ -1,4 +1,0 @@
-1:FirebaseController의 인라인 권한 체크를 AuthUtil로 대체
-2:MemberController의 인라인 권한 체크를 AuthUtil로 대체
-3:SeniorController의 인라인 권한 체크를 AuthUtil로 대체
-4:PushController의 인라인 권한 체크를 AuthUtil로 대체

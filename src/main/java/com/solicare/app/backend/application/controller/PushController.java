@@ -10,6 +10,7 @@ import com.solicare.app.backend.domain.dto.push.PushDeliveryResult;
 import com.solicare.app.backend.domain.enums.Role;
 import com.solicare.app.backend.domain.service.DeviceService;
 import com.solicare.app.backend.domain.service.PushService;
+import com.solicare.app.backend.global.auth.AuthUtil;
 import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
 
@@ -42,10 +43,7 @@ public class PushController {
     @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> getMemberDevices(
             Authentication authentication, @PathVariable String memberUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 디바이스 목록을 조회할 수 있습니다");
         }
@@ -65,10 +63,7 @@ public class PushController {
             Authentication authentication,
             @PathVariable String memberUuid,
             @PathVariable String deviceUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인만 자신의 디바이스를 추가할 수 있습니다");
         }
         DeviceManageResult result = deviceService.link(Role.MEMBER, memberUuid, deviceUuid);
@@ -87,10 +82,7 @@ public class PushController {
             Authentication authentication,
             @PathVariable String memberUuid,
             @Valid @RequestBody PushRequestDTO.Send requestDTO) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 디바이스에 푸시를 보낼 수 있습니다");
         }
@@ -116,10 +108,7 @@ public class PushController {
     @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> getSeniorDevices(
             Authentication authentication, @PathVariable String seniorUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 디바이스 목록을 조회할 수 있습니다");
         }
@@ -139,10 +128,7 @@ public class PushController {
             Authentication authentication,
             @PathVariable String seniorUuid,
             @PathVariable String deviceUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인만 자신의 디바이스를 추가할 수 있습니다");
         }
         DeviceManageResult result = deviceService.link(Role.SENIOR, seniorUuid, deviceUuid);
@@ -161,10 +147,7 @@ public class PushController {
             Authentication authentication,
             @PathVariable String seniorUuid,
             @Valid @RequestBody PushRequestDTO.Send requestDTO) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 디바이스에 푸시를 보낼 수 있습니다");
         }

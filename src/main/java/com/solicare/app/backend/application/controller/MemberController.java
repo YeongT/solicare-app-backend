@@ -7,6 +7,7 @@ import com.solicare.app.backend.domain.dto.member.MemberJoinResult;
 import com.solicare.app.backend.domain.dto.member.MemberLoginResult;
 import com.solicare.app.backend.domain.dto.member.MemberProfileResult;
 import com.solicare.app.backend.domain.service.MemberService;
+import com.solicare.app.backend.global.auth.AuthUtil;
 import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
 
@@ -90,10 +91,7 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('MEMBER', 'ADMIN')")
     public ResponseEntity<ApiResponse<MemberResponseDTO.Profile>> getMemberProfile(
             Authentication authentication, @PathVariable String memberUuid) {
-        boolean isAdmin =
-                authentication.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !authentication.getName().equals(memberUuid)) {
+        if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인의 정보만 조회 가능합니다.");
         }
         MemberProfileResult result = memberService.getProfile(memberUuid);
