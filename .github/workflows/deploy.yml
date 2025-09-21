@@ -68,6 +68,8 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean bootJar --info
+        env:
+          SPRINGDOC_SERVER_URL: ${{ vars.SERVER_URL }}
       - name: Find built jar path
         id: jar
         run: |
@@ -104,7 +106,7 @@ jobs:
             echo "Waiting for actuator on 8080... ($i)"
             sleep 3
           done
-          cat /home/ubuntu/actions-runner/_work/solicare-app-backend/solicare-app-backend/app.log || true
+          cat /home/ubuntu/actions-runner/_work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/app.log || true
           echo "[ERROR] App is not running on 8080 or /actuator/health is not available." >&2
           exit 1
       - name: Deployment Status Success
@@ -117,8 +119,8 @@ jobs:
               repo: context.repo.repo,
               deployment_id: ${{ needs.build.outputs.deployment_id }},
               state: 'success',
-              environment_url: 'https://api.solicare.kro.kr',
-              log_url: 'https://github.com/Solicare/solicare-app-backend/actions/runs/${{ github.run_id }}'
+              environment_url: ${{ vars.SERVER_URL }},
+              log_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })
       - name: Deployment Status Failure
         if: failure() || needs.build.result == 'failure'
@@ -130,5 +132,5 @@ jobs:
               repo: context.repo.repo,
               deployment_id: ${{ needs.build.outputs.deployment_id }},
               state: 'failure',
-              log_url: 'https://github.com/Solicare/solicare-app-backend/actions/runs/${{ github.run_id }}'
+              log_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })

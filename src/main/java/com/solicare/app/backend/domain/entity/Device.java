@@ -1,6 +1,7 @@
 package com.solicare.app.backend.domain.entity;
 
-import com.solicare.app.backend.domain.enums.Push;
+import com.solicare.app.backend.domain.enums.PushMethod;
+import com.solicare.app.backend.domain.enums.Role;
 
 import jakarta.persistence.*;
 
@@ -9,6 +10,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"pushMethod", "token"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -22,7 +24,7 @@ public class Device {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Push type;
+    private PushMethod pushMethod;
 
     @Column(nullable = false, length = 2048)
     private String token;
@@ -81,5 +83,25 @@ public class Device {
         this.token = token;
         this.touch();
         return this;
+    }
+
+    public Role getOwnerRole() {
+        if (getMember() != null) {
+            return Role.MEMBER;
+        } else if (getSenior() != null) {
+            return Role.SENIOR;
+        } else {
+            return null;
+        }
+    }
+
+    public String getOwnerUuid() {
+        if (getMember() != null) {
+            return getMember().getUuid();
+        } else if (getSenior() != null) {
+            return getSenior().getUuid();
+        } else {
+            return null;
+        }
     }
 }

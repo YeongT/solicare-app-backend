@@ -15,6 +15,12 @@ public final class PushRequestDTO {
     @Schema(name = "PushRequestSend", description = "푸시 메시지 발송 요청 DTO")
     public record Send(
             @Schema(
+                            description = "토큰",
+                            example = "token",
+                            requiredMode = Schema.RequiredMode.REQUIRED)
+                    @NotBlank(message = "토큰은 필수입니다.")
+                    String token,
+            @Schema(
                             description = "푸시 채널",
                             example = "INFO",
                             requiredMode = Schema.RequiredMode.REQUIRED)
@@ -33,18 +39,12 @@ public final class PushRequestDTO {
                     @NotBlank(message = "내용은 필수입니다.")
                     String message) {}
 
-    @Schema(name = "PushRequestRegisterToken", description = "푸시 토큰 갱신 요청 DTO")
-    public record RenewToken(
+    @Schema(name = "PushRequestTokenBody", description = "푸시 토큰의 body를 담는 DTO")
+    public record TokenBody(
             @Schema(
-                            description = "기존 토큰",
-                            example = "old_token",
+                            description = "토큰",
+                            example = "token",
                             requiredMode = Schema.RequiredMode.REQUIRED)
-                    @NotBlank(message = "기존 토큰은 필수입니다.")
-                    String oldToken,
-            @Schema(
-                            description = "새 토큰",
-                            example = "new_token",
-                            requiredMode = Schema.RequiredMode.REQUIRED)
-                    @NotBlank(message = "새 토큰은 필수입니다.")
-                    String newToken) {}
+                    @NotBlank(message = "토큰은 필수입니다.")
+                    String token) {}
 }

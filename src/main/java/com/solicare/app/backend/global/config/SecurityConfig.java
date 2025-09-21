@@ -70,7 +70,8 @@ public class SecurityConfig {
                                                 "/actuator/**",
                                                 "/v3/api-docs/**",
                                                 "/swagger-ui/**",
-                                                "/swagger-resources/**")
+                                                "/swagger-resources/**",
+                                                "/api/firebase/fcm/status")
                                         .permitAll()
                                         .requestMatchers(
                                                 HttpMethod.POST,
@@ -78,11 +79,12 @@ public class SecurityConfig {
                                                 "/api/member/login",
                                                 "/api/senior/join",
                                                 "/api/senior/login",
-                                                "/api/firebase/fcm/renew")
+                                                "/api/firebase/fcm/renew",
+                                                "/api/firebase/fcm/register")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.PUT, "/api/firebase/fcm/*")
+                                        .requestMatchers(HttpMethod.PUT, "/api/firebase/fcm/**")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.DELETE, "/api/firebase/fcm/*")
+                                        .requestMatchers(HttpMethod.DELETE, "/api/firebase/fcm/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())

@@ -134,7 +134,7 @@ jobs:
               repo: context.repo.repo,
               deployment_id: ${{ needs.build.outputs.deployment_id }},
               state: 'success',
-              log_url: 'https://github.com/Solicare/solicare-app-backend/actions/runs/${{ github.run_id }}'
+              log_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })
       - name: Deployment Status Failure
         if: failure() || needs.build.result == 'failure'
@@ -146,5 +146,5 @@ jobs:
               repo: context.repo.repo,
               deployment_id: ${{ needs.build.outputs.deployment_id }},
               state: 'failure',
-              log_url: 'https://github.com/Solicare/solicare-app-backend/actions/runs/${{ github.run_id }}'
+              log_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })

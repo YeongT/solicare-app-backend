@@ -3,6 +3,8 @@ package com.solicare.app.backend.domain.service;
 import com.solicare.app.backend.application.dto.request.SeniorRequestDTO;
 import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.mapper.SeniorMapper;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
+import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorJoinResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorLoginResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorProfileResult;
@@ -40,7 +42,9 @@ public class SeniorService {
 
         String jwtToken = jwtTokenProvider.createToken(List.of(Role.SENIOR), newSenior.getUuid());
         return SeniorJoinResult.of(
-                SeniorJoinResult.Status.SUCCESS, new SeniorResponseDTO.Join(jwtToken), null);
+                SeniorJoinResult.Status.SUCCESS,
+                new SeniorResponseDTO.Login(seniorMapper.toProfileDTO(newSenior), jwtToken),
+                null);
     }
 
     /** Senior 로그인 및 JWT 토큰 발급 */
@@ -57,7 +61,7 @@ public class SeniorService {
         String jwtToken = jwtTokenProvider.createToken(List.of(Role.SENIOR), senior.getUuid());
         return SeniorLoginResult.of(
                 SeniorLoginResult.Status.SUCCESS,
-                new SeniorResponseDTO.Login(senior.getName(), jwtToken),
+                new SeniorResponseDTO.Login(seniorMapper.toProfileDTO(senior), jwtToken),
                 null);
     }
 
@@ -68,5 +72,15 @@ public class SeniorService {
         }
         SeniorResponseDTO.Profile profile = seniorMapper.toProfileDTO(senior);
         return SeniorProfileResult.of(SeniorProfileResult.Status.SUCCESS, profile, null);
+    }
+
+    public BasicServiceResult<Void> setMonitoringEnabled(String seniorUuid, boolean monitored) {
+        Senior senior = seniorRepository.findById(seniorUuid).orElse(null);
+        if (senior == null) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.NOT_FOUND, null, null);
+        }
+        senior.setMonitored(monitored);
+        seniorRepository.save(senior);
+        return BasicServiceResult.of(ServiceResult.GenericStatus.SUCCESS, null, null);
     }
 }

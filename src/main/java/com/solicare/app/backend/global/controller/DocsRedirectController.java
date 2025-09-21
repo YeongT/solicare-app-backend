@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @Hidden
-@RestController
+@Controller
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class DocsRedirectController {
     @GetMapping("/docs")

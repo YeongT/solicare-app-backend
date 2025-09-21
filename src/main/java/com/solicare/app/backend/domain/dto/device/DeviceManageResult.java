@@ -11,9 +11,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class DeviceManageResult implements ServiceResult {
-    Status status;
-    DeviceResponseDTO.Info response;
-    Exception exception;
+    private Status status;
+    private DeviceResponseDTO.Info response;
+    private Exception exception;
 
     @Override
     public boolean isSuccess() {
