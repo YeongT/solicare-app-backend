@@ -14,7 +14,7 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "senior_uuid")
     private Senior senior;
 

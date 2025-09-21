@@ -71,6 +71,28 @@ public class MedicineService {
 
     // TODO: implement deleteMedicine with cascade delete of medicine histories?
 
+    public MedicineCreateResult<Void> deleteMedicine(String medicineUuid) {
+        try {
+            Medicine medicine =
+                    medicineRepository
+                            .findByUuid(medicineUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("Medicine not found"));
+
+            // 관련 복용 기록들을 먼저 삭제
+            medicineHistoryRepository.deleteAll(
+                    medicineHistoryRepository.findByMedicine_Uuid(medicineUuid));
+
+            // 약 삭제
+            medicineRepository.delete(medicine);
+
+            return MedicineCreateResult.of(MedicineCreateResult.Status.SUCCESS, null, null);
+        } catch (IllegalArgumentException e) {
+            return MedicineCreateResult.of(MedicineCreateResult.Status.NOT_FOUND, null, e);
+        } catch (Exception e) {
+            return MedicineCreateResult.of(MedicineCreateResult.Status.ERROR, null, e);
+        }
+    }
+
     public MedicineCreateResult<MedicineResponseDTO.IntakeHistory> createMedicineHistory(
             String medicineUuid, MedicineRequestDTO.Record recordDto) {
         try {
@@ -79,7 +101,7 @@ public class MedicineService {
                             .findByUuid(medicineUuid)
                             .orElseThrow(() -> new IllegalArgumentException("Medicine not found"));
             return MedicineCreateResult.of(
-                    MedicineCreateResult.Status.SUCCESS,
+                    MedicineCreateResult.Status.DELETE_SUCCESS,
                     medicineMapper.toMedicineHistoryDTO(
                             medicineHistoryRepository.save(
                                     medicineMapper.toEntity(recordDto, medicine))),

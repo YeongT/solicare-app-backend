@@ -25,9 +25,7 @@ public class MedicineRequestDTO {
                     String description,
             @Schema(description = "복용량", example = "1.0") @NotNull(message = "총 복용량은 필수입니다.")
                     Double doseAmount,
-            @Schema(description = "복약지도", example = "식후 30분에 복용하세요")
-                    @NotBlank(message = "복약지도는 필수입니다.")
-                    String doseInstruction,
+            @Schema(description = "복약지도", example = "식후 30분에 복용하세요") String doseInstruction,
             @Schema(description = "복용 요일", example = "[\"MONDAY\", \"WEDNESDAY\", \"FRIDAY\"]")
                     @NotEmpty(message = "복용 요일은 하나 이상 선택해야 합니다.")
                     Set<DayOfWeek> daysOfWeek,

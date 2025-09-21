@@ -23,7 +23,7 @@ public class MedicineCreateResult<CreatedInfoDTODataType> implements ServiceResu
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public enum Status {
         SUCCESS(ApiStatus._CREATED, "MEDICINE201", "생성 작업이 성공적으로 처리되었습니다."),
-
+        DELETE_SUCCESS(ApiStatus._OK, "MEDICINE200", "삭제 작업이 성공적으로 처리되었습니다."),
         NOT_FOUND(ApiStatus._NOT_FOUND, "MEDICINE404", "해당 리소스를 찾을 수 없습니다."),
         ALREADY_EXIST(ApiStatus._CONFLICT, "MEDICINE409", "이미 존재하는 약품입니다."),
         ERROR(ApiStatus._INTERNAL_SERVER_ERROR, "MEDICINE500", "약품 등록 처리 중 오류가 발생했습니다.");

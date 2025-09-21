@@ -154,4 +154,26 @@ public class MedicineController {
                 result.getResponse(),
                 result.getException());
     }
+
+    @Operation(summary = "시니어 복용약 삭제", description = "특정 UUID의 약과 관련된 모든 복용 기록을 삭제합니다.")
+    @DeleteMapping("/{medicineUuid}")
+    public ResponseEntity<ApiResponse<Void>> deleteMedicine(
+            Authentication authentication,
+            @PathVariable String seniorUuid,
+            @PathVariable String medicineUuid) {
+        boolean isAdmin =
+                authentication.getAuthorities().stream()
+                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !authentication.getName().equals(seniorUuid)) {
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인의 약물만 삭제할 수 있습니다.");
+        }
+
+        MedicineCreateResult<Void> result = medicineService.deleteMedicine(medicineUuid);
+        return apiResponseFactory.onResult(
+                result.getStatus().getApiStatus(),
+                result.getStatus().getCode(),
+                result.getStatus().getMessage(),
+                result.getResponse(),
+                result.getException());
+    }
 }

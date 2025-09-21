@@ -17,7 +17,7 @@ public class MedicineHistory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medicine_uuid")
     private Medicine medicine;
 
