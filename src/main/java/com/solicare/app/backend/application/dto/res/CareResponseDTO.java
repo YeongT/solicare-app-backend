@@ -1,5 +1,7 @@
 package com.solicare.app.backend.application.dto.res;
 
+import com.solicare.app.backend.domain.enums.Gender;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.AccessLevel;
@@ -20,6 +22,8 @@ public final class CareResponseDTO {
     public record SeniorBrief(
             @Schema(description = "시니어 UUID") String uuid,
             @Schema(description = "시니어 이름") String name,
+            @Schema(description = "시니어 나이") Integer age,
+            @Schema(description = "시니어 성별") Gender gender,
             @Schema(description = "읽지 않은 알림 수") Long unreadAlertCount) {}
 
     @Schema(name = "CareSeniorDetailResponse", description = "모니터링 시니어 상세 응답 DTO")

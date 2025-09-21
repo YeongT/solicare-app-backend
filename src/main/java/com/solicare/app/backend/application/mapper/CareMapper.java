@@ -27,7 +27,11 @@ public class CareMapper {
 
     public CareResponseDTO.SeniorBrief toSeniorBriefDTO(Senior senior, Long unreadAlertCount) {
         return new CareResponseDTO.SeniorBrief(
-                senior.getUuid(), senior.getName(), unreadAlertCount);
+                senior.getUuid(),
+                senior.getName(),
+                senior.getAge(),
+                senior.getGender(),
+                unreadAlertCount);
     }
 
     public SeniorSensorStat toEntity(PostSensorStat dto, Senior senior) {
