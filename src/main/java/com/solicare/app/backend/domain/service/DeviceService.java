@@ -3,8 +3,9 @@ package com.solicare.app.backend.domain.service;
 import com.solicare.app.backend.application.dto.res.DeviceResponseDTO;
 import com.solicare.app.backend.application.enums.PushChannel;
 import com.solicare.app.backend.application.mapper.DeviceMapper;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
+import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.device.DeviceManageResult;
-import com.solicare.app.backend.domain.dto.device.DeviceQueryResult;
 import com.solicare.app.backend.domain.entity.Device;
 import com.solicare.app.backend.domain.entity.Member;
 import com.solicare.app.backend.domain.entity.Senior;
@@ -33,28 +34,19 @@ public class DeviceService {
     private final MemberRepository memberRepository;
     private final SeniorRepository seniorRepository;
 
-    public boolean isDeviceOwner(
-            Role role, String uuid, PushMethod pushMethodType, String deviceToken) {
-        return getDevices(role, uuid).getResponse().stream()
-                .anyMatch(
-                        device ->
-                                device.type() == pushMethodType
-                                        && device.token().equals(deviceToken));
-    }
-
-    public DeviceQueryResult getDevices(Role role, String uuid) {
+    public BasicServiceResult<List<DeviceResponseDTO.Info>> getDevices(Role role, String uuid) {
         switch (role) {
             case MEMBER -> {
-                return DeviceQueryResult.of(
-                        DeviceQueryResult.Status.SUCCESS,
+                return BasicServiceResult.of(
+                        ServiceResult.GenericStatus.SUCCESS,
                         deviceRepository.findByMember_Uuid(uuid).stream()
                                 .map(deviceMapper::from)
                                 .collect(Collectors.toList()),
                         null);
             }
             case SENIOR -> {
-                return DeviceQueryResult.of(
-                        DeviceQueryResult.Status.SUCCESS,
+                return BasicServiceResult.of(
+                        ServiceResult.GenericStatus.SUCCESS,
                         deviceRepository.findBySenior_Uuid(uuid).stream()
                                 .map(deviceMapper::from)
                                 .collect(Collectors.toList()),
@@ -64,25 +56,27 @@ public class DeviceService {
         }
     }
 
-    public DeviceQueryResult getAllDevicesByPush(PushMethod type) {
-        return DeviceQueryResult.of(
-                DeviceQueryResult.Status.SUCCESS,
-                deviceRepository.findByPushMethod(type).stream()
+    public BasicServiceResult<List<DeviceResponseDTO.Info>> getAllDevicesByPush(PushMethod method) {
+        return BasicServiceResult.of(
+                ServiceResult.GenericStatus.SUCCESS,
+                deviceRepository.findByPushMethod(method).stream()
                         .map(deviceMapper::from)
                         .collect(Collectors.toList()),
                 null);
     }
 
-    public DeviceQueryResult getCurrentStatus(PushMethod type, String token) {
-        Device device = deviceRepository.findByPushMethodAndToken(type, token).orElse(null);
-        if (device == null) {
-            return DeviceQueryResult.of(
-                    DeviceQueryResult.Status.ERROR,
-                    null,
-                    new IllegalArgumentException("TOKEN_NOT_FOUND"));
+    public BasicServiceResult<DeviceResponseDTO.Info> getDeviceInfo(
+            PushMethod method, String token) {
+        try {
+            Device device =
+                    deviceRepository
+                            .findByPushMethodAndToken(method, token)
+                            .orElseThrow(() -> new IllegalArgumentException("DEVICE_NOT_FOUND"));
+            return BasicServiceResult.of(
+                    ServiceResult.GenericStatus.SUCCESS, deviceMapper.from(device), null);
+        } catch (Exception e) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.ERROR, null, e);
         }
-        return DeviceQueryResult.of(
-                DeviceQueryResult.Status.SUCCESS, List.of(deviceMapper.from(device)), null);
     }
 
     public DeviceManageResult update(PushMethod type, String oldToken, String newToken) {

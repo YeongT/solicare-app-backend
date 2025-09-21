@@ -3,8 +3,8 @@ package com.solicare.app.backend.application.controller;
 import com.solicare.app.backend.application.dto.request.PushRequestDTO;
 import com.solicare.app.backend.application.dto.res.DeviceResponseDTO;
 import com.solicare.app.backend.application.factory.ApiResponseFactory;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.device.DeviceManageResult;
-import com.solicare.app.backend.domain.dto.device.DeviceQueryResult;
 import com.solicare.app.backend.domain.dto.push.PushBatchProcessResult;
 import com.solicare.app.backend.domain.dto.push.PushDeliveryResult;
 import com.solicare.app.backend.domain.enums.Role;
@@ -44,16 +44,11 @@ public class PushController {
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> getMemberDevices(
             Authentication authentication, @PathVariable String memberUuid) {
         if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
-            return apiResponseFactory.onFailure(
-                    ApiStatus._FORBIDDEN, "본인만 자신의 디바이스 목록을 조회할 수 있습니다");
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "디바이스 목록을 조회할 권한이 없습니다");
         }
-        DeviceQueryResult result = deviceService.getDevices(Role.MEMBER, memberUuid);
-        return apiResponseFactory.onResult(
-                result.getStatus().getApiStatus(),
-                result.getStatus().getCode(),
-                result.getStatus().getMessage(),
-                result.getResponse(),
-                result.getException());
+        BasicServiceResult<List<DeviceResponseDTO.Info>> result =
+                deviceService.getDevices(Role.MEMBER, memberUuid);
+        return result.getApiResponse(apiResponseFactory);
     }
 
     @Operation(summary = "멤버 디바이스 등록", description = "특정 멤버의 UUID로, 디바이스를 추가(연결)합니다.")
@@ -64,7 +59,7 @@ public class PushController {
             @PathVariable String memberUuid,
             @PathVariable String deviceUuid) {
         if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
-            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인만 자신의 디바이스를 추가할 수 있습니다");
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "디바이스를 등록할 권한이 없습니다");
         }
         DeviceManageResult result = deviceService.link(Role.MEMBER, memberUuid, deviceUuid);
         return apiResponseFactory.onResult(
@@ -83,8 +78,7 @@ public class PushController {
             @PathVariable String memberUuid,
             @Valid @RequestBody PushRequestDTO.Send requestDTO) {
         if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
-            return apiResponseFactory.onFailure(
-                    ApiStatus._FORBIDDEN, "본인만 자신의 디바이스에 푸시를 보낼 수 있습니다");
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "푸시를 발송할 권한이 없습니다");
         }
         PushBatchProcessResult result =
                 pushService.pushBatch(
@@ -109,16 +103,11 @@ public class PushController {
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> getSeniorDevices(
             Authentication authentication, @PathVariable String seniorUuid) {
         if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
-            return apiResponseFactory.onFailure(
-                    ApiStatus._FORBIDDEN, "본인만 자신의 디바이스 목록을 조회할 수 있습니다");
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "디바이스 목록을 조회할 권한이 없습니다");
         }
-        DeviceQueryResult result = deviceService.getDevices(Role.SENIOR, seniorUuid);
-        return apiResponseFactory.onResult(
-                result.getStatus().getApiStatus(),
-                result.getStatus().getCode(),
-                result.getStatus().getMessage(),
-                result.getResponse(),
-                result.getException());
+        BasicServiceResult<List<DeviceResponseDTO.Info>> result =
+                deviceService.getDevices(Role.SENIOR, seniorUuid);
+        return result.getApiResponse(apiResponseFactory);
     }
 
     @Operation(summary = "시니어 디바이스 등록", description = "특정 시니어의 UUID로, 디바이스를 추가(연결)합니다.")
@@ -129,7 +118,7 @@ public class PushController {
             @PathVariable String seniorUuid,
             @PathVariable String deviceUuid) {
         if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
-            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "본인만 자신의 디바이스를 추가할 수 있습니다");
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "디바이스를 등록할 권한이 없습니다");
         }
         DeviceManageResult result = deviceService.link(Role.SENIOR, seniorUuid, deviceUuid);
         return apiResponseFactory.onResult(
@@ -148,8 +137,7 @@ public class PushController {
             @PathVariable String seniorUuid,
             @Valid @RequestBody PushRequestDTO.Send requestDTO) {
         if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
-            return apiResponseFactory.onFailure(
-                    ApiStatus._FORBIDDEN, "본인만 자신의 디바이스에 푸시를 보낼 수 있습니다");
+            return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "푸시를 발송할 권한이 없습니다");
         }
         PushBatchProcessResult result =
                 pushService.pushBatch(

@@ -2,7 +2,6 @@ package com.solicare.app.backend.application.mapper;
 
 import com.solicare.app.backend.application.dto.res.DeviceResponseDTO;
 import com.solicare.app.backend.domain.entity.Device;
-import com.solicare.app.backend.domain.enums.Role;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,27 +16,7 @@ public class DeviceMapper {
                 device.getUuid(),
                 device.getPushMethod(),
                 device.getToken(),
-                getOwnerRole(device),
-                getOwnerUuid(device));
-    }
-
-    private Role getOwnerRole(Device device) {
-        if (device.getMember() != null) {
-            return Role.MEMBER;
-        } else if (device.getSenior() != null) {
-            return Role.SENIOR;
-        } else {
-            return null;
-        }
-    }
-
-    private String getOwnerUuid(Device device) {
-        if (device.getMember() != null) {
-            return device.getMember().getUuid();
-        } else if (device.getSenior() != null) {
-            return device.getSenior().getUuid();
-        } else {
-            return null;
-        }
+                device.getOwnerRole(),
+                device.getOwnerUuid());
     }
 }

@@ -3,8 +3,8 @@ package com.solicare.app.backend.application.controller;
 import com.solicare.app.backend.application.dto.request.PushRequestDTO;
 import com.solicare.app.backend.application.dto.res.DeviceResponseDTO;
 import com.solicare.app.backend.application.factory.ApiResponseFactory;
+import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.device.DeviceManageResult;
-import com.solicare.app.backend.domain.dto.device.DeviceQueryResult;
 import com.solicare.app.backend.domain.dto.push.PushDeliveryResult;
 import com.solicare.app.backend.domain.enums.PushMethod;
 import com.solicare.app.backend.domain.service.DeviceService;
@@ -38,27 +38,19 @@ public class FirebaseController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/fcm/devices")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmDevices() {
-        DeviceQueryResult result = deviceService.getAllDevicesByPush(PushMethod.FCM);
-        return apiResponseFactory.onResult(
-                result.getStatus().getApiStatus(),
-                result.getStatus().getCode(),
-                result.getStatus().getMessage(),
-                result.getResponse(),
-                result.getException());
+        BasicServiceResult<List<DeviceResponseDTO.Info>> result =
+                deviceService.getAllDevicesByPush(PushMethod.FCM);
+        return result.getApiResponse(apiResponseFactory);
     }
 
     @Operation(summary = "FCM 상태 확인", description = "FCM 토큰의 등록 상태를 확인합니다.")
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
     @GetMapping("/fcm/status")
-    public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmStatus(
+    public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmStatus(
             @RequestParam String token) {
-        DeviceQueryResult result = deviceService.getCurrentStatus(PushMethod.FCM, token);
-        return apiResponseFactory.onResult(
-                result.getStatus().getApiStatus(),
-                result.getStatus().getCode(),
-                result.getStatus().getMessage(),
-                result.getResponse(),
-                result.getException());
+        BasicServiceResult<DeviceResponseDTO.Info> result =
+                deviceService.getDeviceInfo(PushMethod.FCM, token);
+        return result.getApiResponse(apiResponseFactory);
     }
 
     @Operation(summary = "FCM 토큰 등록", description = "FCM 토큰을 등록합니다.")

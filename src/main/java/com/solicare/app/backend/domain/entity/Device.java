@@ -1,6 +1,7 @@
 package com.solicare.app.backend.domain.entity;
 
 import com.solicare.app.backend.domain.enums.PushMethod;
+import com.solicare.app.backend.domain.enums.Role;
 
 import jakarta.persistence.*;
 
@@ -82,5 +83,25 @@ public class Device {
         this.token = token;
         this.touch();
         return this;
+    }
+
+    public Role getOwnerRole() {
+        if (getMember() != null) {
+            return Role.MEMBER;
+        } else if (getSenior() != null) {
+            return Role.SENIOR;
+        } else {
+            return null;
+        }
+    }
+
+    public String getOwnerUuid() {
+        if (getMember() != null) {
+            return getMember().getUuid();
+        } else if (getSenior() != null) {
+            return getSenior().getUuid();
+        } else {
+            return null;
+        }
     }
 }
