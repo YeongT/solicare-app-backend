@@ -1,6 +1,6 @@
 package com.solicare.app.backend.domain.entity;
 
-import com.solicare.app.backend.domain.enums.Push;
+import com.solicare.app.backend.domain.enums.PushMethod;
 
 import jakarta.persistence.*;
 
@@ -9,6 +9,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"pushMethod", "token"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -22,7 +23,7 @@ public class Device {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Push type;
+    private PushMethod pushMethod;
 
     @Column(nullable = false, length = 2048)
     private String token;

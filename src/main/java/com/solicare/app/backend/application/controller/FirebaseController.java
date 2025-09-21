@@ -6,7 +6,7 @@ import com.solicare.app.backend.application.factory.ApiResponseFactory;
 import com.solicare.app.backend.domain.dto.device.DeviceManageResult;
 import com.solicare.app.backend.domain.dto.device.DeviceQueryResult;
 import com.solicare.app.backend.domain.dto.push.PushDeliveryResult;
-import com.solicare.app.backend.domain.enums.Push;
+import com.solicare.app.backend.domain.enums.PushMethod;
 import com.solicare.app.backend.domain.service.DeviceService;
 import com.solicare.app.backend.domain.service.FirebaseService;
 import com.solicare.app.backend.global.res.ApiResponse;
@@ -38,7 +38,7 @@ public class FirebaseController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/fcm/devices")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmDevices() {
-        DeviceQueryResult result = deviceService.getAllDevicesByPush(Push.FCM);
+        DeviceQueryResult result = deviceService.getAllDevicesByPush(PushMethod.FCM);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -52,7 +52,7 @@ public class FirebaseController {
     @GetMapping("/fcm/status")
     public ResponseEntity<ApiResponse<List<DeviceResponseDTO.Info>>> fcmStatus(
             @RequestParam String token) {
-        DeviceQueryResult result = deviceService.getCurrentStatus(Push.FCM, token);
+        DeviceQueryResult result = deviceService.getCurrentStatus(PushMethod.FCM, token);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -65,7 +65,7 @@ public class FirebaseController {
     @PostMapping("/fcm/register")
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmRegister(
             @Valid @RequestBody PushRequestDTO.TokenBody dto) {
-        DeviceManageResult result = deviceService.register(Push.FCM, dto.token());
+        DeviceManageResult result = deviceService.register(PushMethod.FCM, dto.token());
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -93,7 +93,7 @@ public class FirebaseController {
     @DeleteMapping("/fcm/{token}")
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmUnregister(
             @PathVariable String token) {
-        DeviceManageResult result = deviceService.delete(Push.FCM, token);
+        DeviceManageResult result = deviceService.delete(PushMethod.FCM, token);
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -108,7 +108,7 @@ public class FirebaseController {
     @PutMapping("/fcm/renew/{oldToken}")
     public ResponseEntity<ApiResponse<DeviceResponseDTO.Info>> fcmRenew(
             @PathVariable String oldToken, @RequestBody @Valid PushRequestDTO.TokenBody dto) {
-        DeviceManageResult result = deviceService.update(Push.FCM, oldToken, dto.token());
+        DeviceManageResult result = deviceService.update(PushMethod.FCM, oldToken, dto.token());
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),

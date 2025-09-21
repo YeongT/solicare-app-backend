@@ -8,7 +8,7 @@ import com.solicare.app.backend.domain.dto.device.DeviceQueryResult;
 import com.solicare.app.backend.domain.entity.Device;
 import com.solicare.app.backend.domain.entity.Member;
 import com.solicare.app.backend.domain.entity.Senior;
-import com.solicare.app.backend.domain.enums.Push;
+import com.solicare.app.backend.domain.enums.PushMethod;
 import com.solicare.app.backend.domain.enums.Role;
 import com.solicare.app.backend.domain.repository.DeviceRepository;
 import com.solicare.app.backend.domain.repository.MemberRepository;
@@ -33,10 +33,13 @@ public class DeviceService {
     private final MemberRepository memberRepository;
     private final SeniorRepository seniorRepository;
 
-    public boolean isDeviceOwner(Role role, String uuid, Push pushType, String deviceToken) {
+    public boolean isDeviceOwner(
+            Role role, String uuid, PushMethod pushMethodType, String deviceToken) {
         return getDevices(role, uuid).getResponse().stream()
                 .anyMatch(
-                        device -> device.type() == pushType && device.token().equals(deviceToken));
+                        device ->
+                                device.type() == pushMethodType
+                                        && device.token().equals(deviceToken));
     }
 
     public DeviceQueryResult getDevices(Role role, String uuid) {
@@ -61,17 +64,17 @@ public class DeviceService {
         }
     }
 
-    public DeviceQueryResult getAllDevicesByPush(Push type) {
+    public DeviceQueryResult getAllDevicesByPush(PushMethod type) {
         return DeviceQueryResult.of(
                 DeviceQueryResult.Status.SUCCESS,
-                deviceRepository.findByType(type).stream()
+                deviceRepository.findByPushMethod(type).stream()
                         .map(deviceMapper::from)
                         .collect(Collectors.toList()),
                 null);
     }
 
-    public DeviceQueryResult getCurrentStatus(Push type, String token) {
-        Device device = deviceRepository.findByTypeAndToken(type, token).orElse(null);
+    public DeviceQueryResult getCurrentStatus(PushMethod type, String token) {
+        Device device = deviceRepository.findByPushMethodAndToken(type, token).orElse(null);
         if (device == null) {
             return DeviceQueryResult.of(
                     DeviceQueryResult.Status.ERROR,
@@ -82,14 +85,14 @@ public class DeviceService {
                 DeviceQueryResult.Status.SUCCESS, List.of(deviceMapper.from(device)), null);
     }
 
-    public DeviceManageResult update(Push type, String oldToken, String newToken) {
+    public DeviceManageResult update(PushMethod type, String oldToken, String newToken) {
         try {
-            Device device = deviceRepository.findByTypeAndToken(type, oldToken).orElse(null);
+            Device device = deviceRepository.findByPushMethodAndToken(type, oldToken).orElse(null);
             if (device == null) {
                 return register(type, newToken);
             }
 
-            if (deviceRepository.existsByTypeAndToken(type, newToken)) {
+            if (deviceRepository.existsByPushMethodAndToken(type, newToken)) {
                 return DeviceManageResult.of(DeviceManageResult.Status.ALREADY_EXISTS, null, null);
             }
 
@@ -105,24 +108,24 @@ public class DeviceService {
         }
     }
 
-    public DeviceManageResult register(Push type, String token) {
+    public DeviceManageResult register(PushMethod method, String token) {
         try {
-            if (deviceRepository.existsByTypeAndToken(type, token)) {
+            if (deviceRepository.existsByPushMethodAndToken(method, token)) {
                 return DeviceManageResult.of(DeviceManageResult.Status.ALREADY_EXISTS, null, null);
             }
             DeviceResponseDTO.Info info =
                     deviceMapper.from(
                             deviceRepository.save(
-                                    Device.builder().type(type).token(token).build()));
+                                    Device.builder().pushMethod(method).token(token).build()));
             return DeviceManageResult.of(DeviceManageResult.Status.CREATED, info, null);
         } catch (Exception e) {
             return DeviceManageResult.of(DeviceManageResult.Status.ERROR, null, e);
         }
     }
 
-    public DeviceManageResult delete(Push type, String token) {
+    public DeviceManageResult delete(PushMethod type, String token) {
         try {
-            Device device = deviceRepository.findByTypeAndToken(type, token).orElse(null);
+            Device device = deviceRepository.findByPushMethodAndToken(type, token).orElse(null);
             if (device == null) {
                 return DeviceManageResult.of(
                         DeviceManageResult.Status.DEVICE_NOT_FOUND, null, null);

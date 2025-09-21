@@ -6,7 +6,7 @@ import com.solicare.app.backend.application.mapper.DeviceMapper;
 import com.solicare.app.backend.domain.dto.push.PushBatchProcessResult;
 import com.solicare.app.backend.domain.dto.push.PushDeliveryResult;
 import com.solicare.app.backend.domain.entity.Device;
-import com.solicare.app.backend.domain.enums.Push;
+import com.solicare.app.backend.domain.enums.PushMethod;
 import com.solicare.app.backend.domain.enums.Role;
 import com.solicare.app.backend.domain.repository.DeviceRepository;
 import com.solicare.app.backend.domain.repository.MemberRepository;
@@ -41,7 +41,7 @@ public class PushService {
                     PushDeliveryResult.Status.UNAVAILABLE,
                     new IllegalArgumentException("Device not found"));
         }
-        if (Objects.requireNonNull(deviceOpt.get().getType()) == Push.FCM) {
+        if (Objects.requireNonNull(deviceOpt.get().getPushMethod()) == PushMethod.FCM) {
             return firebaseService.sendMessageTo(
                     deviceOpt.get().getToken(), channel, title, message);
         }
@@ -49,7 +49,7 @@ public class PushService {
         return PushDeliveryResult.of(
                 PushDeliveryResult.Status.ERROR,
                 new IllegalArgumentException(
-                        "Unsupported push type: " + deviceOpt.get().getType()));
+                        "Unsupported push type: " + deviceOpt.get().getPushMethod()));
     }
 
     public PushBatchProcessResult pushBatch(
@@ -75,7 +75,7 @@ public class PushService {
                 enabledDevices.stream()
                         .map(
                                 device -> {
-                                    if (Objects.requireNonNull(device.type()) == Push.FCM) {
+                                    if (Objects.requireNonNull(device.type()) == PushMethod.FCM) {
                                         return firebaseService.sendMessageTo(
                                                 device.token(), channel, title, message);
                                     }

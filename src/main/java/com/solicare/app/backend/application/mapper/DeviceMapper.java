@@ -15,7 +15,7 @@ public class DeviceMapper {
     public DeviceResponseDTO.Info from(Device device) {
         return new DeviceResponseDTO.Info(
                 device.getUuid(),
-                device.getType(),
+                device.getPushMethod(),
                 device.getToken(),
                 getOwnerRole(device),
                 getOwnerUuid(device));
