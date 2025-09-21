@@ -1,5 +1,6 @@
 package com.solicare.app.backend.application.dto.request;
 
+import com.solicare.app.backend.application.enums.IntakeTime;
 import com.solicare.app.backend.domain.entity.MedicineHistory;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +13,6 @@ import lombok.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Set;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -23,7 +23,7 @@ public class MedicineRequestDTO {
                     String name,
             @Schema(description = "약 설명", example = "해열진통제") @NotBlank(message = "약 설명은 필수입니다.")
                     String description,
-            @Schema(description = "복용량", example = "1.0") @NotNull(message = "복용량은 필수입니다.")
+            @Schema(description = "복용량", example = "1.0") @NotNull(message = "총 복용량은 필수입니다.")
                     Double doseAmount,
             @Schema(description = "복약지도", example = "식후 30분에 복용하세요")
                     @NotBlank(message = "복약지도는 필수입니다.")
@@ -31,13 +31,12 @@ public class MedicineRequestDTO {
             @Schema(description = "복용 요일", example = "[\"MONDAY\", \"WEDNESDAY\", \"FRIDAY\"]")
                     @NotEmpty(message = "복용 요일은 하나 이상 선택해야 합니다.")
                     Set<DayOfWeek> daysOfWeek,
-            @Schema(description = "복용 시간", example = "[\"08:00\", \"20:00\"]")
-                    @NotEmpty(message = "복용 시간은 하나 이상 선택해야 합니다.")
-                    LocalTime intakeTime,
-            @Schema(description = "먹어야 하는 시간대", example = "[\"아침\", \"점심\", \"저녁\", \"취침전\"]")
+            @Schema(
+                            description = "먹어야 하는 시간대",
+                            example = "[\"MORNING\", \"AFTERNOON\", \"EVENING\", \"NIGHT\"]")
                     @NotEmpty(message = "먹어야 하는 시간대는 하나 이상 선택해야 합니다.")
-                    Set<String> timeCategories,
-            @Schema(description = "메모", example = "의사 처방") String memo) {}
+                    Set<IntakeTime> intakeTime,
+            @Schema(description = "메모", example = "개인 메모") String memo) {}
 
     @Schema(name = "MedicineHistoryRecordRequest", description = "복용 기록 요청 DTO")
     public record Record(

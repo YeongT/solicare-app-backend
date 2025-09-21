@@ -3,9 +3,8 @@ package com.solicare.app.backend.domain.service;
 import com.solicare.app.backend.application.dto.request.MedicineRequestDTO;
 import com.solicare.app.backend.application.dto.res.MedicineResponseDTO;
 import com.solicare.app.backend.application.mapper.MedicineMapper;
-import com.solicare.app.backend.domain.dto.medicine.MedicineCreateResult;
-import com.solicare.app.backend.domain.dto.medicine.MedicineDetailQueryResult;
-import com.solicare.app.backend.domain.dto.medicine.MedicineQueryResult;
+import com.solicare.app.backend.domain.dto.medicine.*;
+import com.solicare.app.backend.domain.entity.Medicine;
 import com.solicare.app.backend.domain.entity.Senior;
 import com.solicare.app.backend.domain.repository.MedicineHistoryRepository;
 import com.solicare.app.backend.domain.repository.MedicineRepository;
@@ -29,7 +28,7 @@ public class MedicineService {
     private final MedicineHistoryRepository medicineHistoryRepository;
     private final MedicineMapper medicineMapper;
 
-    public MedicineCreateResult createMedicine(
+    public MedicineCreateResult<MedicineResponseDTO.Info> createMedicine(
             String seniorUuid, MedicineRequestDTO.Create createDto) {
         try {
             Senior senior =
@@ -39,7 +38,7 @@ public class MedicineService {
 
             return MedicineCreateResult.of(
                     MedicineCreateResult.Status.SUCCESS,
-                    medicineMapper.from(
+                    medicineMapper.toMedicineInfoDTO(
                             medicineRepository.save(
                                     medicineMapper.toEntity(createDto).linkSenior(senior))),
                     null);
@@ -50,7 +49,7 @@ public class MedicineService {
     }
 
     @Transactional(readOnly = true)
-    public MedicineQueryResult getMedicines(String seniorUuid) {
+    public MedicineQueryResult<MedicineResponseDTO.Info> getMedicines(String seniorUuid) {
         try {
             if (!seniorRepository.existsByUuid(seniorUuid)) {
                 return MedicineQueryResult.of(
@@ -61,7 +60,7 @@ public class MedicineService {
 
             List<MedicineResponseDTO.Info> infos =
                     medicineRepository.findBySenior_Uuid(seniorUuid).stream()
-                            .map(medicineMapper::from)
+                            .map(medicineMapper::toMedicineInfoDTO)
                             .toList();
 
             return MedicineQueryResult.of(MedicineQueryResult.Status.SUCCESS, infos, null);
@@ -72,26 +71,62 @@ public class MedicineService {
 
     // TODO: implement deleteMedicine with cascade delete of medicine histories?
 
-    // TODO: implement createMedicineHistory
-
-    // TODO: implement getMedicineHistory
+    public MedicineCreateResult<MedicineResponseDTO.IntakeHistory> createMedicineHistory(
+            String medicineUuid, MedicineRequestDTO.Record recordDto) {
+        try {
+            Medicine medicine =
+                    medicineRepository
+                            .findByUuid(medicineUuid)
+                            .orElseThrow(() -> new IllegalArgumentException("Medicine not found"));
+            return MedicineCreateResult.of(
+                    MedicineCreateResult.Status.SUCCESS,
+                    medicineMapper.toMedicineHistoryDTO(
+                            medicineHistoryRepository.save(
+                                    medicineMapper.toEntity(recordDto, medicine))),
+                    null);
+        } catch (IllegalArgumentException e) {
+            return MedicineCreateResult.of(MedicineCreateResult.Status.NOT_FOUND, null, e);
+        } catch (Exception e) {
+            return MedicineCreateResult.of(MedicineCreateResult.Status.ERROR, null, e);
+        }
+    }
 
     @Transactional(readOnly = true)
-    public MedicineDetailQueryResult getMedicineDetails(String seniorUuid, LocalDate date) {
+    public MedicineQueryResult<MedicineResponseDTO.IntakeHistory> getMedicineHistory(
+            String medicineUuid) {
+        try {
+            if (!medicineRepository.existsByUuid(medicineUuid)) {
+                return MedicineQueryResult.of(
+                        MedicineQueryResult.Status.NOT_FOUND,
+                        null,
+                        new IllegalArgumentException("Medicine not found"));
+            }
+            List<MedicineResponseDTO.IntakeHistory> histories =
+                    medicineHistoryRepository.findByMedicine_Uuid(medicineUuid).stream()
+                            .map(medicineMapper::toMedicineHistoryDTO)
+                            .toList();
+            return MedicineQueryResult.of(MedicineQueryResult.Status.SUCCESS, histories, null);
+        } catch (Exception e) {
+            return MedicineQueryResult.of(MedicineQueryResult.Status.ERROR, null, e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public MedicineQueryResult<MedicineResponseDTO.InfoWithHistory> getMedicineDetails(
+            String seniorUuid, LocalDate date) {
         try {
             if (!seniorRepository.existsByUuid(seniorUuid)) {
-                return MedicineDetailQueryResult.of(
-                        MedicineDetailQueryResult.Status.NOT_FOUND,
+                return MedicineQueryResult.of(
+                        MedicineQueryResult.Status.NOT_FOUND,
                         null,
                         new IllegalArgumentException("Senior not found"));
             }
-
-            List<MedicineResponseDTO.DetailedInfo> detailedInfos =
+            List<MedicineResponseDTO.InfoWithHistory> medicineSummaries =
                     medicineRepository.findBySenior_Uuid(seniorUuid).stream()
                             .map(
                                     (medicine) -> {
                                         MedicineResponseDTO.Info medicineInfo =
-                                                medicineMapper.from(medicine);
+                                                medicineMapper.toMedicineInfoDTO(medicine);
 
                                         List<MedicineResponseDTO.IntakeHistory> intakeHistories =
                                                 medicineHistoryRepository
@@ -99,18 +134,17 @@ public class MedicineService {
                                                                 medicine.getUuid(),
                                                                 date.atStartOfDay())
                                                         .stream()
-                                                        .map(medicineMapper::from)
+                                                        .map(medicineMapper::toMedicineHistoryDTO)
                                                         .toList();
 
-                                        return new MedicineResponseDTO.DetailedInfo(
+                                        return new MedicineResponseDTO.InfoWithHistory(
                                                 medicineInfo, intakeHistories);
                                     })
                             .toList();
-
-            return MedicineDetailQueryResult.of(
-                    MedicineDetailQueryResult.Status.SUCCESS, detailedInfos, null);
+            return MedicineQueryResult.of(
+                    MedicineQueryResult.Status.SUCCESS, medicineSummaries, null);
         } catch (Exception e) {
-            return MedicineDetailQueryResult.of(MedicineDetailQueryResult.Status.ERROR, null, e);
+            return MedicineQueryResult.of(MedicineQueryResult.Status.ERROR, null, e);
         }
     }
 }
