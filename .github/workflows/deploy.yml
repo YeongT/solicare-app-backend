@@ -84,6 +84,7 @@ jobs:
 
   deploy:
     runs-on: self-hosted
+    environment: 'aws-lightsail-solicare-instance'
     needs: [ build ]
     steps:
       - name: Stop previous application and Run builded runtime
@@ -119,7 +120,7 @@ jobs:
               repo: context.repo.repo,
               deployment_id: ${{ needs.build.outputs.deployment_id }},
               state: 'success',
-              environment_url: ${{ vars.SERVER_URL }},
+              environment_url: '${{ vars.SERVER_URL }}',
               log_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })
       - name: Deployment Status Failure
