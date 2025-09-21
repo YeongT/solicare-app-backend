@@ -84,6 +84,7 @@ jobs:
 
   deploy:
     runs-on: self-hosted
+    environment: 'aws-lightsail-solicare-instance'
     needs: [ build ]
     steps:
       - name: Stop previous application and Run builded runtime
