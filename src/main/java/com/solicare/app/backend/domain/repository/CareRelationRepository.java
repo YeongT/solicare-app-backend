@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface CareRelationRepository extends JpaRepository<Care, String> {
-    List<Care> findByMemberOrderByMember_NameAsc(Member member);
+    List<Care> findByMemberOrderBySenior_NameAsc(Member member);
 
-    List<Care> findBySeniorOrderBySenior_NameAsc(Senior senior);
+    List<Care> findBySeniorOrderByMember_NameAsc(Senior senior);
 
     boolean existsByMemberAndSenior(Member member, Senior senior);
 }

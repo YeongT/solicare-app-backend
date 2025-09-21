@@ -158,14 +158,13 @@ public class DeviceService {
                                     .orElseThrow(
                                             () -> new IllegalArgumentException("SENIOR_NOT_FOUND"))
                             : null;
+            // TODO: query available devices before linking,
+            //  and send unlink push to the old owner after linking
             pushService.pushBatch(role, uuid, PushChannel.INFO, "새로운 기기 연결", "새로운 기기가 연결되었습니다.");
             switch (role) {
-                case MEMBER -> {
-                    device.link(member);
-                }
-                case SENIOR -> {
-                    device.link(senior);
-                }
+                case MEMBER -> device.link(member);
+                case SENIOR -> device.link(senior);
+                default -> throw new IllegalArgumentException("INVALID_ROLE");
             }
             pushService.sendPushToDevice(
                     deviceUuid, PushChannel.INFO, "기기 연결 성공", "기기가 성공적으로 연결되었습니다.");

@@ -71,7 +71,7 @@ public class CareService {
                             .findByUuid(memberUuid)
                             .orElseThrow(() -> new IllegalArgumentException("MEMBER_NOT_FOUND"));
             List<CareResponseDTO.SeniorBrief> seniorBriefs =
-                    careRelationRepository.findByMemberOrderByMember_NameAsc(member).stream()
+                    careRelationRepository.findByMemberOrderBySenior_NameAsc(member).stream()
                             .map(
                                     care -> {
                                         Senior senior = care.getSenior();
@@ -97,7 +97,7 @@ public class CareService {
                             .findByUuid(seniorUuid)
                             .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
             List<Member> members =
-                    careRelationRepository.findBySeniorOrderBySenior_NameAsc(senior).stream()
+                    careRelationRepository.findBySeniorOrderByMember_NameAsc(senior).stream()
                             .map(Care::getMember)
                             .toList();
             return CareQueryResult.of(
