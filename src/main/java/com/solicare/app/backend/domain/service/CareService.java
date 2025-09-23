@@ -6,16 +6,16 @@ import com.solicare.app.backend.application.dto.request.MemberRequestDTO;
 import com.solicare.app.backend.application.dto.request.SeniorRequestDTO;
 import com.solicare.app.backend.application.dto.res.CareResponseDTO;
 import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
+import com.solicare.app.backend.application.enums.PushChannel;
+import com.solicare.app.backend.application.enums.SeniorEvent;
 import com.solicare.app.backend.application.mapper.CareMapper;
 import com.solicare.app.backend.application.mapper.SeniorMapper;
 import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
 import com.solicare.app.backend.domain.dto.care.CareQueryResult;
-import com.solicare.app.backend.domain.entity.Care;
-import com.solicare.app.backend.domain.entity.Member;
-import com.solicare.app.backend.domain.entity.Senior;
-import com.solicare.app.backend.domain.entity.SeniorSensorStat;
+import com.solicare.app.backend.domain.entity.*;
+import com.solicare.app.backend.domain.enums.Role;
 import com.solicare.app.backend.domain.repository.CareAlertRepository;
 import com.solicare.app.backend.domain.repository.CareRelationRepository;
 import com.solicare.app.backend.domain.repository.MemberRepository;
@@ -31,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -44,6 +46,7 @@ public class CareService {
     private final SeniorSensorStatRepository seniorSensorStatRepository;
     private final CareMapper careMapper;
     private final SeniorMapper seniorMapper;
+    private final PushService pushService;
 
     public BasicServiceResult<Boolean> hasMemberAccessToSenior(
             String memberUuid, String seniorUuid) {
@@ -129,6 +132,14 @@ public class CareService {
                 return CareLinkResult.of(CareLinkResult.Status.INVALID_SENIOR_PASSWORD, null, null);
             }
             careRelationRepository.save(Care.builder().member(member).senior(senior).build());
+
+            pushService.pushBatch(
+                    Role.MEMBER,
+                    memberUuid,
+                    PushChannel.INFO,
+                    "새로운 모니터링 대상",
+                    String.format("모니터링 대상 %s님에 의해 보호자로 추가되었습니다.", senior.getName()),
+                    Optional.empty());
             return CareLinkResult.of(
                     CareLinkResult.Status.SUCCESS, careMapper.toSeniorBriefDTO(senior, 0L), null);
         } catch (Exception e) {
@@ -155,8 +166,14 @@ public class CareService {
             if (!passwordEncoder.matches(linkDto.password(), member.getPassword())) {
                 return CareLinkResult.of(CareLinkResult.Status.INVALID_MEMBER_PASSWORD, null, null);
             }
-
             careRelationRepository.save(Care.builder().member(member).senior(senior).build());
+            pushService.pushBatch(
+                    Role.SENIOR,
+                    senior.getUuid(),
+                    PushChannel.INFO,
+                    "새로운 보호자 등록",
+                    String.format("새로운 보호자 %s가 모니터링을 시작했습니다.", member.getName()),
+                    Optional.empty());
             return CareLinkResult.of(
                     CareLinkResult.Status.SUCCESS, careMapper.toMemberBriefDTO(member), null);
         } catch (Exception e) {
@@ -188,11 +205,40 @@ public class CareService {
                     seniorRepository
                             .findByUuid(seniorUuid)
                             .orElseThrow(() -> new IllegalArgumentException("SENIOR_NOT_FOUND"));
+
+            CareAlert alert = careAlertRepository.save(careMapper.toEntity(dto, senior));
+
+            Map<String, String> eventData =
+                    Map.of("eventUuid", alert.getUuid(), "seniorUuid", senior.getUuid());
+            if (alert.getEventType() == SeniorEvent.CAMERA_BATTERY_LOW
+                    || alert.getEventType() == SeniorEvent.WEARABLE_BATTERY_LOW) {
+                pushService.pushBatch(
+                        Role.SENIOR,
+                        senior.getUuid(),
+                        PushChannel.ALERT,
+                        alert.getEventType().getTitle(),
+                        alert.getEventType().getMessage(),
+                        Optional.of(eventData));
+            } else {
+                careRelationRepository.findBySeniorOrderByMember_NameAsc(senior).stream()
+                        .map(Care::getMember)
+                        .forEach(
+                                member ->
+                                        pushService.pushBatch(
+                                                Role.MEMBER,
+                                                member.getUuid(),
+                                                PushChannel.ALERT,
+                                                String.format(
+                                                        "[%s] %s(%s, %d세)",
+                                                        alert.getEventType().getTitle(),
+                                                        senior.getName(),
+                                                        senior.getGender().getText(),
+                                                        senior.getAge()),
+                                                alert.getEventType().getMessage(),
+                                                Optional.of(eventData)));
+            }
             return BasicServiceResult.of(
-                    ServiceResult.GenericStatus.SUCCESS,
-                    careMapper.toAlertBrief(
-                            careAlertRepository.save(careMapper.toEntity(dto, senior))),
-                    null);
+                    ServiceResult.GenericStatus.SUCCESS, careMapper.toAlertBrief(alert), null);
         } catch (Exception e) {
             return BasicServiceResult.of(ServiceResult.GenericStatus.ERROR, null, e);
         }

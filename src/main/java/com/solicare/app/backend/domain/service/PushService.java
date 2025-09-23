@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,7 +35,11 @@ public class PushService {
     private final DeviceMapper deviceMapper;
 
     public PushDeliveryResult sendPushToDevice(
-            String deviceUuid, PushChannel channel, String title, String message) {
+            String deviceUuid,
+            PushChannel channel,
+            String title,
+            String message,
+            Optional<Map<String, String>> data) {
         Optional<Device> deviceOpt = deviceRepository.findByUuid(deviceUuid);
         if (deviceOpt.isEmpty()) {
             return PushDeliveryResult.of(
@@ -43,7 +48,7 @@ public class PushService {
         }
         if (Objects.requireNonNull(deviceOpt.get().getPushMethod()) == PushMethod.FCM) {
             return firebaseService.sendMessageTo(
-                    deviceOpt.get().getToken(), channel, title, message);
+                    deviceOpt.get().getToken(), channel, title, message, data);
         }
 
         return PushDeliveryResult.of(
@@ -53,7 +58,12 @@ public class PushService {
     }
 
     public PushBatchProcessResult pushBatch(
-            Role role, String uuid, PushChannel channel, String title, String message) {
+            Role role,
+            String uuid,
+            PushChannel channel,
+            String title,
+            String message,
+            Optional<Map<String, String>> data) {
         if (!existsByRoleAndUuid(role, uuid)) {
             return PushBatchProcessResult.of(null, PushBatchProcessResult.Status.NOT_FOUND);
         }
@@ -77,7 +87,7 @@ public class PushService {
                                 device -> {
                                     if (Objects.requireNonNull(device.type()) == PushMethod.FCM) {
                                         return firebaseService.sendMessageTo(
-                                                device.token(), channel, title, message);
+                                                device.token(), channel, title, message, data);
                                     }
                                     return PushDeliveryResult.of(
                                             PushDeliveryResult.Status.ERROR,

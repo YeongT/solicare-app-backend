@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -160,14 +161,24 @@ public class DeviceService {
                             : null;
             // TODO: query available devices before linking,
             //  and send unlink push to the old owner after linking
-            pushService.pushBatch(role, uuid, PushChannel.INFO, "새로운 기기 연결", "새로운 기기가 연결되었습니다.");
+            pushService.pushBatch(
+                    role,
+                    uuid,
+                    PushChannel.INFO,
+                    "새로운 기기 연결",
+                    "새로운 기기가 연결되었습니다.",
+                    Optional.empty());
             switch (role) {
                 case MEMBER -> device.link(member);
                 case SENIOR -> device.link(senior);
                 default -> throw new IllegalArgumentException("INVALID_ROLE");
             }
             pushService.sendPushToDevice(
-                    deviceUuid, PushChannel.INFO, "기기 연결 성공", "기기가 성공적으로 연결되었습니다.");
+                    deviceUuid,
+                    PushChannel.INFO,
+                    "기기 연결 성공",
+                    "기기가 성공적으로 연결되었습니다.",
+                    Optional.empty());
             return DeviceManageResult.of(
                     DeviceManageResult.Status.LINKED,
                     deviceMapper.from(deviceRepository.save(device)),
