@@ -37,6 +37,10 @@ public class SeniorService {
         if (seniorRepository.existsByUserId(dto.userId())) {
             return SeniorJoinResult.of(SeniorJoinResult.Status.ALREADY_TAKEN_USERID, null, null);
         }
+        if (seniorRepository.existsByPhoneNumber(dto.phoneNumber())) {
+            return SeniorJoinResult.of(SeniorJoinResult.Status.ALREADY_TAKEN_PHONE, null, null);
+        }
+
         Senior newSenior = seniorMapper.toEntity(dto);
         seniorRepository.save(newSenior);
 

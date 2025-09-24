@@ -3,6 +3,8 @@ name: Deploy to AWS Lightsail Instance
 on:
   push:
     branches: [ master ]
+    tags:
+      - v*
 
 permissions:
   contents: read

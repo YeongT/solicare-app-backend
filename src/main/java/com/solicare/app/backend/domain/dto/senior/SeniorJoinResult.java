@@ -25,7 +25,8 @@ public class SeniorJoinResult implements ServiceResult {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public enum Status {
         SUCCESS(ApiStatus._OK, "SENIOR200", "시니어 가입이 성공적으로 처리되었습니다."),
-        ALREADY_TAKEN_USERID(ApiStatus._CONFLICT, "SENIOR409", "이미 존재하는 아이디 입니다."),
+        ALREADY_TAKEN_USERID(ApiStatus._CONFLICT, "SENIOR409", "사용중인 아이디 입니다."),
+        ALREADY_TAKEN_PHONE(ApiStatus._CONFLICT, "SENIOR409", "이미 등록된 전화번호 입니다."),
         ERROR(ApiStatus._INTERNAL_SERVER_ERROR, "SENIOR500", "시니어 가입 처리 중 오류가 발생했습니다.");
 
         private final ApiStatus apiStatus;

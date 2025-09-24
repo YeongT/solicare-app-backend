@@ -24,8 +24,8 @@ public class MemberJoinResult implements ServiceResult {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public enum Status {
         SUCCESS(ApiStatus._OK, "MEMBER201", "멤버 가입이 성공적으로 처리되었습니다."),
-        ALREADY_USED_EMAIL(ApiStatus._CONFLICT, "MEMBER409", "이미 존재하는 이메일주소 입니다."),
-        ALREADY_USED_PHONE(ApiStatus._CONFLICT, "MEMBER409", "이미 존재하는 전화번호 입니다."),
+        ALREADY_TAKEN_EMAIL(ApiStatus._CONFLICT, "MEMBER409", "사용중인 이메일주소 입니다."),
+        ALREADY_TAKEN_PHONE(ApiStatus._CONFLICT, "MEMBER409", "이미 등록된 전화번호 입니다."),
         ERROR(ApiStatus._INTERNAL_SERVER_ERROR, "MEMBER500", "멤버 가입 처리 중 오류가 발생했습니다.");
 
         private final ApiStatus apiStatus;

@@ -39,10 +39,10 @@ public class MemberService {
      */
     public MemberJoinResult createAndIssueToken(MemberRequestDTO.Join dto) {
         if (memberRepository.existsByEmail(dto.email())) {
-            return MemberJoinResult.of(MemberJoinResult.Status.ALREADY_USED_EMAIL, null, null);
+            return MemberJoinResult.of(MemberJoinResult.Status.ALREADY_TAKEN_EMAIL, null, null);
         }
         if (memberRepository.existsByPhoneNumber(dto.phoneNumber())) {
-            return MemberJoinResult.of(MemberJoinResult.Status.ALREADY_USED_PHONE, null, null);
+            return MemberJoinResult.of(MemberJoinResult.Status.ALREADY_TAKEN_PHONE, null, null);
         }
         Member newMember = memberMapper.toEntity(dto);
         memberRepository.save(newMember);
