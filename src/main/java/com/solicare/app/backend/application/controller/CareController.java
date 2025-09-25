@@ -9,7 +9,6 @@ import com.solicare.app.backend.domain.dto.BasicServiceResult;
 import com.solicare.app.backend.domain.dto.care.CareLinkResult;
 import com.solicare.app.backend.domain.dto.care.CareQueryResult;
 import com.solicare.app.backend.domain.service.CareService;
-import com.solicare.app.backend.domain.service.SeniorService;
 import com.solicare.app.backend.global.auth.AuthUtil;
 import com.solicare.app.backend.global.res.ApiResponse;
 import com.solicare.app.backend.global.res.ApiStatus;
@@ -35,7 +34,6 @@ import java.util.List;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class CareController {
     private final CareService careService;
-    private final SeniorService seniorService;
     private final ApiResponseFactory apiResponseFactory;
 
     @Operation(
@@ -171,6 +169,21 @@ public class CareController {
                 result.getException());
     }
 
+    @Operation(
+            summary = "시니어 모니터링 상태 조회",
+            description = "특정 시니어의 UUID로 시니어 모니터링 상태(on/off)를 조회합니다.")
+    @GetMapping("/senior/{seniorUuid}/monitoring")
+    @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Boolean>> getMonitoringEnabled(
+            Authentication authentication, @PathVariable String seniorUuid) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
+            return apiResponseFactory.onFailure(
+                    ApiStatus._FORBIDDEN, "본인만 자신의 모니터링 상태를 조회할 수 있습니다.");
+        }
+        BasicServiceResult<Boolean> result = careService.getMonitoringEnabled(seniorUuid);
+        return result.getApiResponse(apiResponseFactory);
+    }
+
     @Operation(summary = "시니어 모니터링 활성화/비활성화", description = "특정 시니어의 UUID로 모니터링 상태(on/off)를 변경합니다.")
     @PatchMapping("/senior/{seniorUuid}/monitoring")
     @PreAuthorize("hasAnyRole('MEMBER', 'SENIOR', 'ADMIN')")
@@ -183,7 +196,7 @@ public class CareController {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "해당 시니어의 모니터링 상태를 변경할 권한이 없습니다.");
         }
-        BasicServiceResult<Void> result = seniorService.setMonitoringEnabled(seniorUuid, enabled);
+        BasicServiceResult<Void> result = careService.setMonitoringEnabled(seniorUuid, enabled);
         return result.getApiResponse(apiResponseFactory);
     }
 

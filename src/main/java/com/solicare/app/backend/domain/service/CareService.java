@@ -181,6 +181,25 @@ public class CareService {
         }
     }
 
+    public BasicServiceResult<Boolean> getMonitoringEnabled(String seniorUuid) {
+        Senior senior = seniorRepository.findByUuid(seniorUuid).orElse(null);
+        if (senior == null) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.NOT_FOUND, null, null);
+        }
+        return BasicServiceResult.of(
+                ServiceResult.GenericStatus.SUCCESS, senior.getMonitored(), null);
+    }
+
+    public BasicServiceResult<Void> setMonitoringEnabled(String seniorUuid, boolean monitored) {
+        Senior senior = seniorRepository.findById(seniorUuid).orElse(null);
+        if (senior == null) {
+            return BasicServiceResult.of(ServiceResult.GenericStatus.NOT_FOUND, null, null);
+        }
+        senior.setMonitored(monitored);
+        seniorRepository.save(senior);
+        return BasicServiceResult.of(ServiceResult.GenericStatus.SUCCESS, null, null);
+    }
+
     public BasicServiceResult<CareResponseDTO.StatBrief> addSensorStat(
             String seniorUuid, PostSensorStat dto) {
         try {
