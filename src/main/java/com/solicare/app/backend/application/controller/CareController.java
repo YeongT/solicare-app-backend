@@ -218,12 +218,12 @@ public class CareController {
 
     @Operation(summary = "알림 상세 조회 ", description = "특정 알림의 UUID로 알림 상세 정보를 조회합니다.")
     @GetMapping("/senior/{seniorUuid}/alerts/{alertUuid}")
-    @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MEMBER', 'SENIOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<CareResponseDTO.AlertDetail>> getAlertDetail(
             Authentication authentication,
             @PathVariable String seniorUuid,
             @PathVariable String alertUuid) {
-        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
+        if (AuthUtil.isDeniedToAccessSeniorByMemberOrSenior(careService, authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(
                     ApiStatus._FORBIDDEN, "본인만 자신의 알림 상세 정보를 조회할 수 있습니다.");
         }
