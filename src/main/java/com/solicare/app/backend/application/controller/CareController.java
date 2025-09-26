@@ -216,6 +216,27 @@ public class CareController {
         return result.getApiResponse(apiResponseFactory);
     }
 
+    @Operation(summary = "알림 상세 조회 ", description = "특정 알림의 UUID로 알림 상세 정보를 조회합니다.")
+    @GetMapping("/senior/{seniorUuid}/alerts/{alertUuid}")
+    @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<CareResponseDTO.AlertDetail>> getAlertDetail(
+            Authentication authentication,
+            @PathVariable String seniorUuid,
+            @PathVariable String alertUuid) {
+        if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
+            return apiResponseFactory.onFailure(
+                    ApiStatus._FORBIDDEN, "본인만 자신의 알림 상세 정보를 조회할 수 있습니다.");
+        }
+        CareQueryResult<CareResponseDTO.AlertDetail> result =
+                careService.getAlertDetail(alertUuid);
+        return apiResponseFactory.onResult(
+                result.getStatus().getApiStatus(),
+                result.getStatus().getCode(),
+                result.getStatus().getMessage(),
+                result.getResponse(),
+                result.getException());
+    }
+
     @Operation(summary = "알림 등록", description = "홈 서버로부터 이벤트를 수신하여 시니어의 알림을 생성하고 푸시로 전송합니다.")
     @PostMapping("/senior/{seniorUuid}/alerts")
     @PreAuthorize("hasAnyRole('SENIOR', 'ADMIN')")

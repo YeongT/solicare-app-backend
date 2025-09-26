@@ -217,6 +217,20 @@ public class CareService {
         }
     }
 
+    public CareQueryResult<CareResponseDTO.AlertDetail> getAlertDetail(String eventUuid) {
+        try {
+            CareAlert alert = careAlertRepository.findByUuid(eventUuid).orElse(null);
+            if (alert == null) {
+                return CareQueryResult.of(CareQueryResult.Status.SENIOR_NOT_FOUND, null, null);
+            }
+
+            return CareQueryResult.of(
+                    CareQueryResult.Status.SUCCESS, careMapper.toAlertDetail(alert), null);
+        } catch (Exception e) {
+            return CareQueryResult.of(CareQueryResult.Status.ERROR, null, e);
+        }
+    }
+
     public BasicServiceResult<CareResponseDTO.AlertBrief> addCareAlert(
             String seniorUuid, PostCareAlert dto) {
         try {
