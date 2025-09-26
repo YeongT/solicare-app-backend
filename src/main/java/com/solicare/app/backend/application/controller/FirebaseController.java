@@ -24,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Tag(name = "Firebase", description = "Google Firebase 관련 API")
 @RestController
@@ -69,10 +70,15 @@ public class FirebaseController {
     @Operation(summary = "FCM 푸시 전송", description = "특정 토큰으로 FCM 푸시를 전송합니다.")
     @PreAuthorize("hasAnyRole('SENIOR', 'MEMBER', 'ADMIN')")
     @PostMapping("/fcm/push")
-    public ResponseEntity<ApiResponse<Void>> fcmPush(@RequestBody @Valid PushRequestDTO.Send dto) {
+    public ResponseEntity<ApiResponse<Void>> fcmPush(
+            @RequestBody @Valid PushRequestDTO.FcmSend dto) {
         PushDeliveryResult result =
                 firebaseService.sendMessageTo(
-                        dto.token(), dto.channel(), dto.title(), dto.message());
+                        dto.token(),
+                        dto.body().channel(),
+                        dto.body().title(),
+                        dto.body().message(),
+                        Optional.ofNullable(dto.body().data()));
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),

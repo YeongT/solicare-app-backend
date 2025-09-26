@@ -3,6 +3,8 @@ name: Deploy to AWS Lightsail Instance
 on:
   push:
     branches: [ master ]
+    tags:
+      - v*
 
 permissions:
   contents: read
@@ -29,7 +31,8 @@ jobs:
               environment: 'aws-lightsail-solicare-instance',
               transient_environment: false,
               auto_inactive: true,
-              required_contexts: []
+              required_contexts: [],
+              auto_merge: false
             });
             core.setOutput('deployment_id', deployment.data.id)
       - name: Set up JDK 21

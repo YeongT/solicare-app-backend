@@ -89,11 +89,6 @@ public class SwaggerConfig {
                                                                         .description(
                                                                                 "리소스를 찾을 수 없음"));
                                                         responses.addApiResponse(
-                                                                "405",
-                                                                new ApiResponse()
-                                                                        .description(
-                                                                                "허용되지 않은 메서드"));
-                                                        responses.addApiResponse(
                                                                 "409",
                                                                 new ApiResponse()
                                                                         .description("중복/충돌"));
@@ -101,27 +96,6 @@ public class SwaggerConfig {
                                                                 "500",
                                                                 new ApiResponse()
                                                                         .description("서버 내부 오류"));
-                                                        responses.addApiResponse(
-                                                                "422",
-                                                                new ApiResponse()
-                                                                        .description("유효성 검사 실패"));
-                                                        responses.addApiResponse(
-                                                                "429",
-                                                                new ApiResponse()
-                                                                        .description(
-                                                                                "요청 제한(Too Many Requests)"));
-                                                        responses.addApiResponse(
-                                                                "502",
-                                                                new ApiResponse()
-                                                                        .description("게이트웨이 오류"));
-                                                        responses.addApiResponse(
-                                                                "503",
-                                                                new ApiResponse()
-                                                                        .description("서비스 일시 중단"));
-                                                        responses.addApiResponse(
-                                                                "504",
-                                                                new ApiResponse()
-                                                                        .description("게이트웨이 타임아웃"));
                                                     }));
         };
     }

@@ -3,8 +3,6 @@ package com.solicare.app.backend.domain.service;
 import com.solicare.app.backend.application.dto.request.SeniorRequestDTO;
 import com.solicare.app.backend.application.dto.res.SeniorResponseDTO;
 import com.solicare.app.backend.application.mapper.SeniorMapper;
-import com.solicare.app.backend.domain.dto.BasicServiceResult;
-import com.solicare.app.backend.domain.dto.ServiceResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorJoinResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorLoginResult;
 import com.solicare.app.backend.domain.dto.senior.SeniorProfileResult;
@@ -37,6 +35,10 @@ public class SeniorService {
         if (seniorRepository.existsByUserId(dto.userId())) {
             return SeniorJoinResult.of(SeniorJoinResult.Status.ALREADY_TAKEN_USERID, null, null);
         }
+        if (seniorRepository.existsByPhoneNumber(dto.phoneNumber())) {
+            return SeniorJoinResult.of(SeniorJoinResult.Status.ALREADY_TAKEN_PHONE, null, null);
+        }
+
         Senior newSenior = seniorMapper.toEntity(dto);
         seniorRepository.save(newSenior);
 
@@ -72,15 +74,5 @@ public class SeniorService {
         }
         SeniorResponseDTO.Profile profile = seniorMapper.toProfileDTO(senior);
         return SeniorProfileResult.of(SeniorProfileResult.Status.SUCCESS, profile, null);
-    }
-
-    public BasicServiceResult<Void> setMonitoringEnabled(String seniorUuid, boolean monitored) {
-        Senior senior = seniorRepository.findById(seniorUuid).orElse(null);
-        if (senior == null) {
-            return BasicServiceResult.of(ServiceResult.GenericStatus.NOT_FOUND, null, null);
-        }
-        senior.setMonitored(monitored);
-        seniorRepository.save(senior);
-        return BasicServiceResult.of(ServiceResult.GenericStatus.SUCCESS, null, null);
     }
 }

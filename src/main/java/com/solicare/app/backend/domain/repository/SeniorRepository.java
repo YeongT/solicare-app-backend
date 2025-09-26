@@ -11,9 +11,9 @@ public interface SeniorRepository extends JpaRepository<Senior, String> {
 
     Optional<Senior> findByUserId(String userid);
 
-    Optional<Senior> findByPhoneNumber(String phoneNumber);
+    boolean existsByUuid(String uuid);
 
     boolean existsByUserId(String userId);
 
-    boolean existsByUuid(String uuid);
+    boolean existsByPhoneNumber(String phoneNumber);
 }

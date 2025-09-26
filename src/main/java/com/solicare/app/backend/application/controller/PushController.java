@@ -28,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Tag(name = "Push", description = "디바이스 및 푸시 관련 API")
 @RestController
@@ -76,7 +77,7 @@ public class PushController {
     public ResponseEntity<ApiResponse<List<PushDeliveryResult>>> pushToMember(
             Authentication authentication,
             @PathVariable String memberUuid,
-            @Valid @RequestBody PushRequestDTO.Send requestDTO) {
+            @Valid @RequestBody PushRequestDTO.MessageBody messageDTO) {
         if (AuthUtil.isDeniedToAccessMemberByMember(authentication, memberUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "푸시를 발송할 권한이 없습니다");
         }
@@ -84,9 +85,10 @@ public class PushController {
                 pushService.pushBatch(
                         Role.MEMBER,
                         memberUuid,
-                        requestDTO.channel(),
-                        requestDTO.title(),
-                        requestDTO.message());
+                        messageDTO.channel(),
+                        messageDTO.title(),
+                        messageDTO.message(),
+                        Optional.ofNullable(messageDTO.data()));
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
@@ -135,7 +137,7 @@ public class PushController {
     public ResponseEntity<ApiResponse<List<PushDeliveryResult>>> pushToSenior(
             Authentication authentication,
             @PathVariable String seniorUuid,
-            @Valid @RequestBody PushRequestDTO.Send requestDTO) {
+            @Valid @RequestBody PushRequestDTO.MessageBody messageDTO) {
         if (AuthUtil.isDeniedToAccessSeniorBySenior(authentication, seniorUuid)) {
             return apiResponseFactory.onFailure(ApiStatus._FORBIDDEN, "푸시를 발송할 권한이 없습니다");
         }
@@ -143,9 +145,10 @@ public class PushController {
                 pushService.pushBatch(
                         Role.SENIOR,
                         seniorUuid,
-                        requestDTO.channel(),
-                        requestDTO.title(),
-                        requestDTO.message());
+                        messageDTO.channel(),
+                        messageDTO.title(),
+                        messageDTO.message(),
+                        Optional.ofNullable(messageDTO.data()));
         return apiResponseFactory.onResult(
                 result.getStatus().getApiStatus(),
                 result.getStatus().getCode(),
