@@ -24,14 +24,19 @@ RUN ./gradlew bootJar --no-daemon
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Create non-root user
-RUN groupadd -r spring && useradd -r -g spring spring
+# Install Tailscale
+RUN apt-get update && \
+    apt-get install -y curl iptables && \
+    curl -fsSL https://tailscale.com/install.sh | sh && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create directories for Tailscale
+RUN mkdir -p /var/lib/tailscale /var/run/tailscale
 
 COPY --from=builder /app/build/libs/*.jar app.jar
-
-# Change ownership
-RUN chown spring:spring app.jar
-USER spring
+COPY docker/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 EXPOSE 8080
 
@@ -41,5 +46,8 @@ ENV JWT_SECRET=""
 ENV DB_URL=""
 ENV DB_USERNAME=""
 ENV DB_PASSWORD=""
+ENV TAILSCALE_ENABLED="false"
+ENV TAILSCALE_AUTHKEY=""
+ENV ENVIRONMENT="staging"
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/app/start.sh"]
