@@ -37,7 +37,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: context.sha,
-              environment: 'staging',
+              environment: 'northflank-staging',
               transient_environment: true,
               auto_inactive: true,
               required_contexts: [],
@@ -120,7 +120,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: context.sha,
-              environment: 'production',
+              environment: 'oracle-cloud-solicare-instance',
               transient_environment: false,
               auto_inactive: true,
               required_contexts: [],
@@ -146,12 +146,6 @@ jobs:
           docker push ghcr.io/${{ github.repository }}:master
           docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
 
-      - name: Create Firebase config file
-        shell: bash
-        run: |
-          mkdir -p /opt/solicare
-          echo "${{ secrets.FIREBASE_ADMIN_JSON_BASE64 }}" | base64 -d > /opt/solicare/firebase-admin.json
-
       - name: Stop and remove existing container
         shell: bash
         run: |
@@ -169,8 +163,8 @@ jobs:
             -e DB_URL='${{ secrets.DB_URL }}' \
             -e DB_USERNAME='${{ secrets.DB_USERNAME }}' \
             -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            -e FIREBASE_ADMIN_JSON_BASE64='${{ secrets.FIREBASE_ADMIN_JSON_BASE64 }}' \
             -e SPRINGDOC_SERVER_URL='${{ vars.SERVER_URL }}' \
-            -v /opt/solicare/firebase-admin.json:/app/configs/firebase/solicare-firebase-admin.json:ro \
             ghcr.io/${{ github.repository }}:latest
 
       - name: Health Check
