@@ -150,6 +150,7 @@ jobs:
         run: |
           docker run -d \
             --name solicare-backend-new \
+            --add-host=host.docker.internal:host-gateway \
             -p 8081:8080 \
             -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
             -e DB_URL='${{ secrets.DB_URL }}' \
@@ -189,6 +190,7 @@ jobs:
           # 실제 포트로 새 컨테이너 실행
           docker run -d \
             --name solicare-backend \
+            --add-host=host.docker.internal:host-gateway \
             --restart unless-stopped \
             -p ${{ vars.SERVER_PORT }}:8080 \
             -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
