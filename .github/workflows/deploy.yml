@@ -102,15 +102,43 @@ jobs:
               log_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })
 
-  # master 브랜치: self-hosted (ARM) → Oracle Cloud
-  build-and-deploy-production:
-    name: Build and Deploy Production (ARM)
+  # master 브랜치: 이미지 빌드 & 푸시만 (배포 X)
+  build-production:
+    name: Build Production Image (ARM)
     runs-on: self-hosted
-    environment: 'oracle-cloud-solicare-instance'
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
 
+      - name: Log in to Container Registry
+        shell: bash
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set lowercase image name
+        shell: bash
+        run: echo "IMAGE_NAME_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        shell: bash
+        run: |
+          docker build -t ghcr.io/${{ env.IMAGE_NAME_LC }}:latest \
+                       -t ghcr.io/${{ env.IMAGE_NAME_LC }}:master \
+                       -t ghcr.io/${{ env.IMAGE_NAME_LC }}:${{ github.sha }} .
+
+      - name: Push Docker image
+        shell: bash
+        run: |
+          docker push ghcr.io/${{ env.IMAGE_NAME_LC }}:latest
+          docker push ghcr.io/${{ env.IMAGE_NAME_LC }}:master
+          docker push ghcr.io/${{ env.IMAGE_NAME_LC }}:${{ github.sha }}
+
+  # v* 태그: Oracle Cloud 배포
+  deploy-production:
+    name: Deploy to Production (ARM)
+    runs-on: self-hosted
+    environment: 'oracle-cloud-solicare-instance'
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
       - name: Create GitHub Deployment
         id: deployment
         uses: actions/github-script@v7
@@ -132,29 +160,57 @@ jobs:
         shell: bash
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build Docker image
+      - name: Set lowercase image name
         shell: bash
-        run: |
-          docker build -t ghcr.io/${{ github.repository }}:latest \
-                       -t ghcr.io/${{ github.repository }}:master \
-                       -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+        run: echo "IMAGE_NAME_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      - name: Push Docker image
+      - name: Pull latest image
         shell: bash
-        run: |
-          docker push ghcr.io/${{ github.repository }}:latest
-          docker push ghcr.io/${{ github.repository }}:master
-          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+        run: docker pull ghcr.io/${{ env.IMAGE_NAME_LC }}:latest
 
-      - name: Stop and remove existing container
+      # 새 컨테이너를 테스트 포트에서 먼저 검증
+      - name: Start new container for verification
         shell: bash
         run: |
+          docker run -d \
+            --name solicare-backend-new \
+            -p 8081:8080 \
+            -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            -e DB_URL='${{ secrets.DB_URL }}' \
+            -e DB_USERNAME='${{ secrets.DB_USERNAME }}' \
+            -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            -e FIREBASE_ADMIN_JSON_BASE64='${{ secrets.FIREBASE_ADMIN_JSON_BASE64 }}' \
+            -e SPRINGDOC_SERVER_URL='${{ vars.SERVER_URL }}' \
+            ghcr.io/${{ env.IMAGE_NAME_LC }}:latest
+
+      - name: Verify new container health
+        shell: bash
+        run: |
+          for i in {1..15}; do
+            if curl -sSf http://localhost:8081/actuator/health > /dev/null; then
+              echo "[SUCCESS] New container is healthy."
+              exit 0
+            fi
+            echo "Waiting for health check... ($i/15)"
+            sleep 4
+          done
+          echo "[ERROR] New container health check failed. Rolling back..."
+          docker logs solicare-backend-new
+          docker rm -f solicare-backend-new
+          exit 1
+
+      # 검증 성공 시 기존 컨테이너 교체
+      - name: Switch to new container
+        shell: bash
+        run: |
+          # 기존 컨테이너 제거
           docker stop solicare-backend || true
           docker rm solicare-backend || true
 
-      - name: Run new container
-        shell: bash
-        run: |
+          # 테스트 컨테이너 제거 (검증용이었으므로)
+          docker rm -f solicare-backend-new
+
+          # 실제 포트로 새 컨테이너 실행
           docker run -d \
             --name solicare-backend \
             --restart unless-stopped \
@@ -165,22 +221,9 @@ jobs:
             -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
             -e FIREBASE_ADMIN_JSON_BASE64='${{ secrets.FIREBASE_ADMIN_JSON_BASE64 }}' \
             -e SPRINGDOC_SERVER_URL='${{ vars.SERVER_URL }}' \
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ env.IMAGE_NAME_LC }}:latest
 
-      - name: Health Check
-        shell: bash
-        run: |
-          for i in {1..15}; do
-            if curl -sSf http://localhost:8080/actuator/health > /dev/null; then
-              echo "[SUCCESS] Container deployed successfully."
-              exit 0
-            fi
-            echo "Waiting for health check... ($i/15)"
-            sleep 4
-          done
-          echo "[ERROR] Health check failed."
-          docker logs solicare-backend
-          exit 1
+          echo "[SUCCESS] Container switched successfully."
 
       - name: Deployment Status Success
         if: success()
